@@ -13,6 +13,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include "helper.hpp"
+#include <format>
 #define PORT "3490"  // 提供给用戶连接的 port
 #define BACKLOG 10   // 有多少个特定的连接队列（pending connections queue）
 
@@ -29,6 +34,10 @@ auto GetInAddr(struct sockaddr *sa) -> void * {
   }
   return &((reinterpret_cast<struct sockaddr_in6 *>(sa))->sin6_addr);
 }
+std::unordered_map<int, int> hash;
+enum class Command { Get, Set, Del };
+
+void Put(int key, int val) { hash[key] = val; }
 
 auto main() -> int {
   int sockfd;
@@ -111,13 +120,39 @@ auto main() -> int {
     inet_ntop(their_addr.ss_family, GetInAddr(reinterpret_cast<struct sockaddr *>(&their_addr)), s, sizeof s);
     printf("server: got connection from %s\n", s);
 
+    // int rec = recv(sockfd, buf, 1023, 0);
+    // buf[rec] = '\0';
+    // std::cout << buf;
     if (fork() == 0) {  // 这个是 child process
       close(sockfd);    // child 不需要 listener
-
-      if (send(new_fd, "Hello, world!", 13, 0) == -1) {
+      char buf[1024];
+      int rec = recv(new_fd, buf, 1024, 0);
+      if (rec == -1) {
         perror("send");
       }
-
+      buf[rec] = '\0';
+      auto cmd = helper::Split(std::string(buf));
+      if (!cmd.empty()) {
+        if (cmd.size() == 2 && cmd[0] == "get" && !cmd[1].empty()) {
+          auto key = atoi(cmd[1].c_str());
+          int data = hash[key];
+            //int a=321;
+          std::string stringbuf = std::to_string(data);
+          // std::string stringbuf = "put success";
+          send(new_fd, stringbuf.c_str(), stringbuf.size(), 0);
+          
+        } else if (cmd.size() == 3 && cmd[0] == "put" && !cmd[1].empty() && !cmd[2].empty()) {
+          auto key = atoi(cmd[1].c_str());
+          auto val = atoi(cmd[2].c_str());
+          hash[key] = val;
+          std::string stringbuf;
+        //   for (auto i : hash) {
+        //     stringbuf+=std::to_string(i.first)
+        //   }
+          send(new_fd, stringbuf.c_str(), stringbuf.size(), 0);
+        }
+      }
+      //   printf("%s\n", buf);
       close(new_fd);
 
       exit(0);
