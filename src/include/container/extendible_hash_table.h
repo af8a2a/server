@@ -4,16 +4,6 @@
 //
 // extendible_hash_table.h
 //
-// Identification: src/include/container/hash/extendible_hash_table.h
-//
-// Copyright (c) 2015-2021, Carnegie Mellon University Database Group
-//
-//===----------------------------------------------------------------------===//
-/**
- * extendible_hash_table.h
- *
- * Implementation of in-memory hash table using extendible hashing
- */
 
 #pragma once
 
