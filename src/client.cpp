@@ -89,11 +89,32 @@ void ThreadClient(const std::vector<std::string>& cmd) {
 
   close(sockfd);
 }
-auto main(int argc, char *argv[]) -> int {
-  std::vector<std::string> cmd;
-  for (int i = 1; i < argc; i++) {
-    cmd.emplace_back(argv[i]);
-  }
 
-  std::thread(ThreadClient, cmd).join();
+void Connect() {
+  int fd = socket(AF_INET, SOCK_STREAM, 0);
+  struct sockaddr_in addr = {};
+  addr.sin_family = AF_INET;
+  addr.sin_port = ntohs(3490);
+  addr.sin_addr.s_addr = ntohl(INADDR_LOOPBACK);  // 127.0.0.1
+  int rv = connect(fd, reinterpret_cast<const struct sockaddr *>(&addr), sizeof(addr));
+  const char* buf="hello";
+  int wrcount = write(fd, buf, strlen(buf));
+  
+  if (wrcount == -1) {
+      std::cerr<<"write error";
+  } else {
+    std::cout<<"hello";
+  }
+}
+
+void Hello() { std::cout << "hello"; }
+auto main(int argc, char *argv[]) -> int {
+  //   std::vector<std::string> cmd;
+  //   for (int i = 1; i < argc; i++) {
+  //     cmd.emplace_back(argv[i]);
+  //   }
+  // printf("1");
+  // std::cout<<1;
+  //Hello();
+  Connect();
 }
