@@ -26,7 +26,7 @@ auto GetInAddr(struct sockaddr *sa) -> void * {
   return &((reinterpret_cast<struct sockaddr_in6 *>(sa))->sin6_addr);
 }
 
-void ThreadClient(const std::vector<std::string>& cmd) {
+void ThreadClient(const std::vector<std::string> &cmd) {
   int sockfd;
   int numbytes;
   char buf[MAXDATASIZE];
@@ -72,49 +72,67 @@ void ThreadClient(const std::vector<std::string>& cmd) {
   // int nums = send(sockfd,"Get",4,0);
   freeaddrinfo(servinfo);  // 全部皆以这个 structure 完成
   std::string msg;
-  for (const auto& i : cmd) {
+  for (const auto &i : cmd) {
     msg += i;
-    msg+=" ";
-    }
+    msg += " ";
+  }
   send(sockfd, msg.data(), msg.size(), 0);
 
-    numbytes = recv(sockfd, buf, MAXDATASIZE - 1, 0);
-    if (numbytes == -1) {
-      perror("recv");
-      exit(1);
-    }
+  numbytes = recv(sockfd, buf, MAXDATASIZE - 1, 0);
+  if (numbytes == -1) {
+    perror("recv");
+    exit(1);
+  }
 
-    buf[numbytes] = '\0';
-    printf("client: received '%s'\n", buf);
+  buf[numbytes] = '\0';
+  printf("client: received '%s'\n", buf);
 
   close(sockfd);
 }
 
-void Connect() {
+//与服务器取得连接，返回描述符
+auto Connect() -> int {
   int fd = socket(AF_INET, SOCK_STREAM, 0);
   struct sockaddr_in addr = {};
   addr.sin_family = AF_INET;
   addr.sin_port = ntohs(3490);
   addr.sin_addr.s_addr = ntohl(INADDR_LOOPBACK);  // 127.0.0.1
   int rv = connect(fd, reinterpret_cast<const struct sockaddr *>(&addr), sizeof(addr));
-  const char* buf="hello";
-  int wrcount = write(fd, buf, strlen(buf));
-  
-  if (wrcount == -1) {
-      std::cerr<<"write error";
-  } else {
-    std::cout<<"hello";
-  }
+  return fd;
 }
 
 void Hello() { std::cout << "hello"; }
 auto main(int argc, char *argv[]) -> int {
-  //   std::vector<std::string> cmd;
-  //   for (int i = 1; i < argc; i++) {
-  //     cmd.emplace_back(argv[i]);
-  //   }
-  // printf("1");
-  // std::cout<<1;
-  //Hello();
-  Connect();
+  std::vector<std::string> cmd;
+  for (int i = 1; i < argc; i++) {
+    cmd.emplace_back(argv[i]);
+  }
+    //put
+  int fd = Connect();
+  write(fd, "put 1 1", strlen("put 1 1"));
+  char buf[1024];
+  int rec = recv(fd, buf, sizeof(buf), 0);
+  buf[rec] = '\0';
+  std::cout << buf << std::endl;
+
+//get
+  memset(buf, '\0', strlen(buf));
+  write(fd, "get 1", strlen("get 1"));
+  rec = recv(fd, buf, sizeof(buf), 0);
+  buf[rec]='\0';
+  std::cout << buf << std::endl;
+  // del
+  memset(buf, '\0', strlen(buf));
+  write(fd, "del 1", strlen("del 1"));
+  rec = recv(fd, buf, sizeof(buf), 0);
+  buf[rec] = '\0';
+  std::cout << buf << std::endl;
+
+
+  // get
+  memset(buf, '\0', strlen(buf));
+  write(fd, "get 1", strlen("get 1"));
+  rec = recv(fd, buf, sizeof(buf), 0);
+  buf[rec] = '\0';
+  std::cout << buf << std::endl;
 }

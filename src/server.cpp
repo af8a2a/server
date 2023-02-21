@@ -6,13 +6,39 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <algorithm>
 #include <cassert>
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <vector>
+#include "helper.hpp"
 #define MAX_EVENT_NUMBER 1024
-#define BUFFER_SIZE 10
+#define BUFFER_SIZE 1024
+
+std::unordered_map<int, int> hash;
+
+void Put(int key, int val) { hash[key] = val; }
+auto Del(int key) -> bool {
+  if (hash.contains(key)) {
+    hash.erase(key);
+    return true;
+  }
+  return false;
+}
+
+auto Get(int key, int *val) -> bool {
+  if (hash.contains(key)) {
+    *val = hash[key];
+    return true;
+  }
+  return false;
+}
+
 /*将文件描述符设置成非阻塞的*/
 auto Setnonblocking(int fd) -> int {
   int old_option = fcntl(fd, F_GETFL);
@@ -52,6 +78,33 @@ void Lt(epoll_event *events, int number, int epollfd, int listenfd) {
         close(sockfd);
         continue;
       }
+      // do something
+      auto cmd = helper::Split(buf);
+      if (!cmd.empty()) {
+        if (cmd.size()==3&&cmd[0] == "put") {
+          Put(atoi(cmd[1].c_str()), atoi(cmd[2].c_str()));
+          send(sockfd, "put success", strlen("put success"),0);
+        } else if (cmd.size() == 2 && cmd[0] == "get") {
+          int val;
+          bool success = Get(atoi(cmd[1].c_str()), &val);
+          std::string ans;
+          if (success) {
+            ans = std::to_string(val);
+          } else {
+            ans="get error";
+          }
+          send(sockfd, ans.c_str(), ans.size(), 0);
+        } else if (cmd.size() == 2 && cmd[0] == "del") {
+          bool success = Del(atoi(cmd[1].c_str()));
+          std::string ans;
+          if (success) {
+            ans = "del success";
+          } else {
+            ans = "del error";
+          }
+          send(sockfd, ans.c_str(), ans.size(), 0);
+        }
+    }
       printf("get%d bytes of content:%s\n", ret, buf);
     } else {
       printf("something else happened\n");
@@ -96,7 +149,45 @@ void Et(epoll_event *events, int number, int epollfd, int listenfd) {
     }
   }
 }
+
+auto ServerThread(const std::vector<std::string> &cmd) -> int {
+  if (cmd.size() <= 2) {
+    printf("usage:%s ip_address port_number\n", basename(cmd[0].c_str()));
+    return 1;
+  }
+  const char *ip = cmd[1].c_str();
+  int port = atoi(cmd[2].c_str());
+  int ret = 0;
+  struct sockaddr_in address;
+  bzero(&address, sizeof(address));
+  address.sin_family = AF_INET;
+  inet_pton(AF_INET, ip, &address.sin_addr);
+  address.sin_port = htons(port);
+  int listenfd = socket(PF_INET, SOCK_STREAM, 0);
+  assert(listenfd >= 0);
+  ret = bind(listenfd, reinterpret_cast<struct sockaddr *>(&address), sizeof(address));
+  assert(ret != -1);
+  ret = listen(listenfd, 5);
+  assert(ret != -1);
+  epoll_event events[MAX_EVENT_NUMBER];
+  int epollfd = epoll_create(5);
+  assert(epollfd != -1);
+  Addfd(epollfd, listenfd, true);
+  while (true) {
+    int ret = epoll_wait(epollfd, events, MAX_EVENT_NUMBER, -1);
+    if (ret < 0) {
+      printf("epoll failure\n");
+      break;
+    }
+    Lt(events, ret, epollfd, listenfd); /*使用LT模式*/
+    // et(events,ret,epollfd,listenfd);/*使用ET模式*/
+  }
+  close(listenfd);
+  return 0;
+}
+
 auto main(int argc, char *argv[]) -> int {
+  // Socket初始化
   if (argc <= 2) {
     printf("usage:%s ip_address port_number\n", basename(argv[0]));
     return 1;
@@ -115,6 +206,7 @@ auto main(int argc, char *argv[]) -> int {
   assert(ret != -1);
   ret = listen(listenfd, 5);
   assert(ret != -1);
+
   epoll_event events[MAX_EVENT_NUMBER];
   int epollfd = epoll_create(5);
   assert(epollfd != -1);
