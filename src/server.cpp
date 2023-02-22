@@ -17,26 +17,19 @@
 #include <unordered_map>
 #include <vector>
 #include "helper.hpp"
+#include "container/extendible_hash_table.cpp"
 #define MAX_EVENT_NUMBER 1024
 #define BUFFER_SIZE 1024
 
-std::unordered_map<int, int> hash;
+ExtendibleHashTable<int, int> hash(2);
 
-void Put(int key, int val) { hash[key] = val; }
+void Put(int key, int val) { hash.Insert(key, val); }
 auto Del(int key) -> bool {
-  if (hash.contains(key)) {
-    hash.erase(key);
-    return true;
-  }
-  return false;
+  return hash.Remove(key);
 }
 
-auto Get(int key, int *val) -> bool {
-  if (hash.contains(key)) {
-    *val = hash[key];
-    return true;
-  }
-  return false;
+auto Get(int key, int& val) -> bool {
+  return hash.Find(key, val);
 }
 
 /*将文件描述符设置成非阻塞的*/
@@ -86,7 +79,7 @@ void Lt(epoll_event *events, int number, int epollfd, int listenfd) {
           send(sockfd, "put success", strlen("put success"),0);
         } else if (cmd.size() == 2 && cmd[0] == "get") {
           int val;
-          bool success = Get(atoi(cmd[1].c_str()), &val);
+          bool success = Get(atoi(cmd[1].c_str()), val);
           std::string ans;
           if (success) {
             ans = std::to_string(val);

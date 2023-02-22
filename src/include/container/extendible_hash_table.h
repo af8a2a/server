@@ -1,9 +1,3 @@
-//===----------------------------------------------------------------------===//
-//
-//                         BusTub
-//
-// extendible_hash_table.h
-//
 
 #pragma once
 
@@ -13,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-#include "container/hash_table.h"
+#include "hash_table.h"
 
 
 /**

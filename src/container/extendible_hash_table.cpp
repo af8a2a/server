@@ -1,14 +1,4 @@
-//===----------------------------------------------------------------------===//
-//
-//                         BusTub
-//
-// extendible_hash_table.cpp
-//
-// Identification: src/container/hash/extendible_hash_table.cpp
-//
-// Copyright (c) 2022, Carnegie Mellon University Database Group
-//
-//===----------------------------------------------------------------------===//
+
 
 #include <cassert>
 #include <cstdlib>
