@@ -31,30 +31,30 @@ auto main(int argc, char *argv[]) -> int {
 
   Conn con;
   int &fd = con.fd_;
-  fd = Connect("127.0.0.1", 3490);
-  write(fd, "put 1 1", strlen("put 1 1"));
+  fd = Connect("cs144.keithw.org", "http");
+  write(fd, "GET /hello HTTP/1.1\r\nHost: cs144.keithw.org\r\n\r\n", strlen("GET /Hello HTTP/1.1\r\nHost: cs144.keithw.org\r\n\r\n"));
   char buf[1024];
   int rec = recv(fd, buf, sizeof(buf), 0);
   buf[rec] = '\0';
   std::cout << buf << std::endl;
 
   // get
-  memset(buf, '\0', strlen(buf));
-  write(fd, "get 1", strlen("get 1"));
-  rec = recv(fd, buf, sizeof(buf), 0);
-  buf[rec] = '\0';
-  std::cout << buf << std::endl;
-  // del
-  memset(buf, '\0', strlen(buf));
-  write(fd, "del 1", strlen("del 1"));
-  rec = recv(fd, buf, sizeof(buf), 0);
-  buf[rec] = '\0';
-  std::cout << buf << std::endl;
+//   memset(buf, '\0', strlen(buf));
+//   write(fd, "get 1", strlen("get 1"));
+//   rec = recv(fd, buf, sizeof(buf), 0);
+//   buf[rec] = '\0';
+//   std::cout << buf << std::endl;
+//   // del
+//   memset(buf, '\0', strlen(buf));
+//   write(fd, "del 1", strlen("del 1"));
+//   rec = recv(fd, buf, sizeof(buf), 0);
+//   buf[rec] = '\0';
+//   std::cout << buf << std::endl;
 
-  // get
-  memset(buf, '\0', strlen(buf));
-  write(fd, "get 1", strlen("get 1"));
-  rec = recv(fd, buf, sizeof(buf), 0);
-  buf[rec] = '\0';
-  std::cout << buf << std::endl;
+//   // get
+//   memset(buf, '\0', strlen(buf));
+//   write(fd, "get 1", strlen("get 1"));
+//   rec = recv(fd, buf, sizeof(buf), 0);
+//   buf[rec] = '\0';
+//   std::cout << buf << std::endl;
 }
