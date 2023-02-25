@@ -3,7 +3,7 @@
  * @Date         : 2020-06-17
  * @copyleft GPL 2.0
  */
-
+#pragma once
 #include <arpa/inet.h>
 #include <algorithm>
 #include <cassert>
