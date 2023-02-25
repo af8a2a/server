@@ -1,3 +1,4 @@
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -8,9 +9,8 @@ auto Connect(const std::string& Address,int port) -> int {
   struct sockaddr_in addr = {};
   addr.sin_family = AF_INET;
   addr.sin_port = ntohs(port);
-  auto ip = helper::SplitIPv4(Address);
-  //todo
-  addr.sin_addr.s_addr = ntohl(INADDR_LOOPBACK);  // 127.0.0.1
+  inet_aton(Address.c_str(), &addr.sin_addr);
+  //todo// 127.0.0.1
   int rv = connect(fd, reinterpret_cast<const struct sockaddr *>(&addr), sizeof(addr));
   return fd;
 }

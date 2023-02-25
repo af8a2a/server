@@ -16,21 +16,18 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "helper.hpp"
 #include "container/extendible_hash_table.cpp"
+#include "epoll/epoll.hpp"
+#include "helper.hpp"
 #define MAX_EVENT_NUMBER 1024
 #define BUFFER_SIZE 1024
 
 ExtendibleHashTable<int, int> hash(2);
 
 void Put(int key, int val) { hash.Insert(key, val); }
-auto Del(int key) -> bool {
-  return hash.Remove(key);
-}
+auto Del(int key) -> bool { return hash.Remove(key); }
 
-auto Get(int key, int& val) -> bool {
-  return hash.Find(key, val);
-}
+auto Get(int key, int &val) -> bool { return hash.Find(key, val); }
 
 /*将文件描述符设置成非阻塞的*/
 auto Setnonblocking(int fd) -> int {
@@ -74,9 +71,9 @@ void Lt(epoll_event *events, int number, int epollfd, int listenfd) {
       // do something
       auto cmd = helper::Split(buf);
       if (!cmd.empty()) {
-        if (cmd.size()==3&&cmd[0] == "put") {
+        if (cmd.size() == 3 && cmd[0] == "put") {
           Put(atoi(cmd[1].c_str()), atoi(cmd[2].c_str()));
-          send(sockfd, "put success", strlen("put success"),0);
+          send(sockfd, "put success", strlen("put success"), 0);
         } else if (cmd.size() == 2 && cmd[0] == "get") {
           int val;
           bool success = Get(atoi(cmd[1].c_str()), val);
@@ -84,7 +81,7 @@ void Lt(epoll_event *events, int number, int epollfd, int listenfd) {
           if (success) {
             ans = std::to_string(val);
           } else {
-            ans="get error";
+            ans = "get error";
           }
           send(sockfd, ans.c_str(), ans.size(), 0);
         } else if (cmd.size() == 2 && cmd[0] == "del") {
@@ -97,7 +94,7 @@ void Lt(epoll_event *events, int number, int epollfd, int listenfd) {
           }
           send(sockfd, ans.c_str(), ans.size(), 0);
         }
-    }
+      }
       printf("get%d bytes of content:%s\n", ret, buf);
     } else {
       printf("something else happened\n");
@@ -143,39 +140,24 @@ void Et(epoll_event *events, int number, int epollfd, int listenfd) {
   }
 }
 
-auto ServerThread(const std::vector<std::string> &cmd) -> int {
-  if (cmd.size() <= 2) {
-    printf("usage:%s ip_address port_number\n", basename(cmd[0].c_str()));
-    return 1;
-  }
-  const char *ip = cmd[1].c_str();
-  int port = atoi(cmd[2].c_str());
-  int ret = 0;
-  struct sockaddr_in address;
-  bzero(&address, sizeof(address));
-  address.sin_family = AF_INET;
-  inet_pton(AF_INET, ip, &address.sin_addr);
-  address.sin_port = htons(port);
-  int listenfd = socket(PF_INET, SOCK_STREAM, 0);
-  assert(listenfd >= 0);
-  ret = bind(listenfd, reinterpret_cast<struct sockaddr *>(&address), sizeof(address));
-  assert(ret != -1);
-  ret = listen(listenfd, 5);
-  assert(ret != -1);
-  epoll_event events[MAX_EVENT_NUMBER];
-  int epollfd = epoll_create(5);
-  assert(epollfd != -1);
-  Addfd(epollfd, listenfd, true);
+auto ServerThread(int fd) -> int {
+
+  Epoll ep(1000, 5);
+  ep.Addfd(fd, false);
+  // epoll_event events[MAX_EVENT_NUMBER];
+  // int epollfd = epoll_create(5);
+  // assert(epollfd != -1);
+  // Addfd(epollfd, listenfd, true);
   while (true) {
-    int ret = epoll_wait(epollfd, events, MAX_EVENT_NUMBER, -1);
+    int ret = ep.Wait();
     if (ret < 0) {
       printf("epoll failure\n");
       break;
     }
-    Lt(events, ret, epollfd, listenfd); /*使用LT模式*/
+    Lt(ep.Getevent(), ret, ep.GetEpollfd(), fd); /*使用LT模式*/
     // et(events,ret,epollfd,listenfd);/*使用ET模式*/
   }
-  close(listenfd);
+  close(fd);
   return 0;
 }
 
@@ -193,6 +175,7 @@ auto main(int argc, char *argv[]) -> int {
   address.sin_family = AF_INET;
   inet_pton(AF_INET, ip, &address.sin_addr);
   address.sin_port = htons(port);
+  address.sin_addr.s_addr = INADDR_ANY;
   int listenfd = socket(PF_INET, SOCK_STREAM, 0);
   assert(listenfd >= 0);
   ret = bind(listenfd, reinterpret_cast<struct sockaddr *>(&address), sizeof(address));
@@ -200,19 +183,6 @@ auto main(int argc, char *argv[]) -> int {
   ret = listen(listenfd, 5);
   assert(ret != -1);
 
-  epoll_event events[MAX_EVENT_NUMBER];
-  int epollfd = epoll_create(5);
-  assert(epollfd != -1);
-  Addfd(epollfd, listenfd, true);
-  while (true) {
-    int ret = epoll_wait(epollfd, events, MAX_EVENT_NUMBER, -1);
-    if (ret < 0) {
-      printf("epoll failure\n");
-      break;
-    }
-    Lt(events, ret, epollfd, listenfd); /*使用LT模式*/
-    // et(events,ret,epollfd,listenfd);/*使用ET模式*/
-  }
-  close(listenfd);
+  ServerThread(listenfd);
   return 0;
 }

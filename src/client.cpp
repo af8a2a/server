@@ -15,29 +15,23 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include "Conn.hpp"
+#include "Socket.hpp"
 #define PORT "3490"      // Client 所要连接的 port
 #define MAXDATASIZE 100  // 我们一次可以收到的最大字节数量（number of bytes）
 
 //与服务器取得连接，返回描述符
-auto Connect(const std::string &ip) -> int {
-  int fd = socket(AF_INET, SOCK_STREAM, 0);
-  struct sockaddr_in addr = {};
-  addr.sin_family = AF_INET;
-  addr.sin_port = ntohs(3490);
-  inet_aton(ip.c_str(), &addr.sin_addr);
-    //addr.sin_addr.s_addr = ntohl(INADDR_LOOPBACK);  // 127.0.0.1
-  int rv = connect(fd, reinterpret_cast<const struct sockaddr *>(&addr), sizeof(addr));
-  return fd;
-}
 
-void Hello() { std::cout << "hello"; }
 auto main(int argc, char *argv[]) -> int {
   std::vector<std::string> cmd;
   for (int i = 1; i < argc; i++) {
     cmd.emplace_back(argv[i]);
   }
   // put
-  int fd = Connect("127.0.0.1");
+
+  Conn con;
+  int &fd = con.fd_;
+  fd = Connect("127.0.0.1", 3490);
   write(fd, "put 1 1", strlen("put 1 1"));
   char buf[1024];
   int rec = recv(fd, buf, sizeof(buf), 0);
