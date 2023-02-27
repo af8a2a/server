@@ -25,7 +25,6 @@ Checks:     '
             modernize-*,
             performance-*,
             portability-*,
-            readability-*,
             -bugprone-easily-swappable-parameters,
             -bugprone-implicit-widening-of-multiplication-result,
             -bugprone-narrowing-conversions,
@@ -40,13 +39,6 @@ Checks:     '
             -google-readability-avoid-underscore-in-googletest-name,
             -modernize-avoid-c-arrays,
             -modernize-use-nodiscard,
-            -readability-convert-member-functions-to-static,
-            -readability-identifier-length,
-            -readability-function-cognitive-complexity,
-            -readability-magic-numbers,
-            -readability-make-member-function-const,
-            -readability-qualified-auto,
-            -readability-redundant-access-specifiers,
             -bugprone-exception-escape,
             '
 CheckOptions:

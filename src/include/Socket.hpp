@@ -1,5 +1,6 @@
 #pragma once
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -7,9 +8,10 @@
 #include <cassert>
 #include <cstring>
 #include <iostream>
-#include "helper.hpp"
+#include "util/InetAddress.hpp"
+#include "util/util.hpp"
 enum class STATE { STATE_REQ, STATE_RES, STATE_END };
-class Conn {
+class Socket {
  public:
   int fd_;
   STATE state_;  // either STATE_REQ or STATE_RES
@@ -17,26 +19,36 @@ class Conn {
   char readbuffer_[1024];
   std::string readbuf_;
   std::string writebuffer_{};
-  size_t buffer_size_=1024;
+  size_t buffer_size_ = 1024;
   size_t write_count_ = 0;
   auto Read() -> void {
-    int rec = recv(fd_, readbuffer_, buffer_size_, 0);
-    readbuffer_[rec]='\0';
-    readbuf_=readbuffer_;
+    while (true) {
+      int rec = recv(fd_, readbuffer_, buffer_size_, 0);
+
+      if (rec != -1) {
+        if (rec == 0) {
+          break;
+        }
+        readbuffer_[rec] = '\0';
+        readbuf_ += readbuffer_;
+      } else {
+        break;
+      }
+    }
   }
   auto Write(const std::string &content) -> void {
     int count = write(fd_, content.c_str(), content.size());
     assert(count != -1);
-    
+
     write_count_ += count;
   }
   auto Connect(const std::string &Address, int port) -> void {
     int fd = socket(AF_INET, SOCK_STREAM, 0);
-    struct sockaddr_in addr = {};
-    addr.sin_family = AF_INET;
-    addr.sin_port = ntohs(port);
-    inet_aton(Address.c_str(), &addr.sin_addr);
-    int rv = connect(fd, reinterpret_cast<const struct sockaddr *>(&addr), sizeof(addr));
+    struct sockaddr_in addr_ = {};
+    addr_.sin_family = AF_INET;
+    addr_.sin_port = ntohs(port);
+    inet_aton(Address.c_str(), &addr_.sin_addr);
+    int rv = connect(fd, reinterpret_cast<const struct sockaddr *>(&addr_), sizeof(addr_));
     assert(rv == 0);
     fd_ = fd;
   }
@@ -147,3 +159,49 @@ auto Connect(const std::string &Address, const std::string &service) -> int {
   freeaddrinfo(servinfo);  // 釋放 servinfo
   return sockfd;
 }
+class ServerSocket {
+ public:
+  ServerSocket() { fd_ = -1; }
+  explicit ServerSocket(int fd) {
+    fd_=fd;
+  }
+  void SetNonBlocking() { fcntl(fd_, F_SETFL, fcntl(fd_, F_GETFL) | O_NONBLOCK); }
+
+  auto Accept(InetAddress* addr) -> int {
+    int clnt_sockfd = ::accept(fd_, reinterpret_cast<sockaddr *>(&addr->addr), &addr->addr_len);
+    util::errif(clnt_sockfd == -1, "socket accept error");
+    return clnt_sockfd;
+  }
+  auto Accept() -> int {
+    int clnt_sockfd = ::accept(fd_, nullptr, nullptr);
+    util::errif(clnt_sockfd == -1, "socket accept error");
+    return clnt_sockfd;
+  }
+  void Bind(const std::string &ip, uint16_t port) {
+    bzero(&addr_, sizeof(addr_));
+    addr_.sin_family = AF_INET;
+    addr_.sin_addr.s_addr = inet_addr(ip.c_str());
+    addr_.sin_port = htons(port);
+    addr_len_ = sizeof(addr_);
+  }
+  void Listen(bool isNonBlocking) {
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    int success = -1;
+    success = bind(sockfd, reinterpret_cast<sockaddr *>(&addr_), addr_len_);
+    assert(success != -1);
+
+    success = listen(sockfd, SOMAXCONN);
+    assert(success != -1);
+
+    if (isNonBlocking) {
+      SetNonBlocking();
+    }
+    fd_ = sockfd;
+  }
+  auto GetFd() -> int { return fd_; }
+
+ private:
+  int fd_;
+  struct sockaddr_in addr_;
+  socklen_t addr_len_;
+};

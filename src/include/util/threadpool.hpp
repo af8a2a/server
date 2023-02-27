@@ -1,4 +1,5 @@
 #pragma once
+#include <cassert>
 #include <condition_variable>
 #include <functional>
 #include <memory>
@@ -10,7 +11,8 @@
 class ThreadPool {
  public:
   explicit ThreadPool(size_t threadCount) : pool_(std::make_shared<Pool>()) {
-    //处理线程
+    // 处理线程
+    assert(threadCount > 0);
     for (size_t i = 0; i < threadCount; i++) {
       std::thread([pool = pool_] {
         std::unique_lock<std::mutex> locker(pool->mtx_);
@@ -30,7 +32,6 @@ class ThreadPool {
       }).detach();
     }
   }
-
 
   ThreadPool() = default;
   ThreadPool(ThreadPool &&) = default;
@@ -55,6 +56,7 @@ class ThreadPool {
 
  private:
   struct Pool {
+
     //锁
     std::mutex mtx_;
     //条件变量，用于阻塞线程

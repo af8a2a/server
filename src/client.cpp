@@ -21,44 +21,26 @@
 #define MAXDATASIZE 100  // 我们一次可以收到的最大字节数量（number of bytes）
 
 //与服务器取得连接，返回描述符
-
+void test() {
+  Socket con;
+  con.Connect("127.0.0.1", 8080);
+  con.Write("hell");
+}
 auto main(int argc, char *argv[]) -> int {
   std::vector<std::string> cmd;
   for (int i = 1; i < argc; i++) {
     cmd.emplace_back(argv[i]);
   }
   // put
+test();
+//   for (int i = 0; i < 5; i++) {
+//     std::thread(test).detach();
+//   }
+  //   Conn con;
+  // //   int fd;
 
-  Conn con;
-  int fd;
-  fd = Connect("cs144.keithw.org", "http");
-  write(fd, "GET /hello HTTP/1.1\r\nHost: cs144.keithw.org\r\n\r\n",
-        strlen("GET /Hello HTTP/1.1\r\nHost: cs144.keithw.org\r\n\r\n"));
-  char buf[1024];
-  int rec = recv(fd, buf, sizeof(buf), 0);
-  buf[rec] = '\0';
-  std::cout << buf << std::endl;
-  con.Connect("cs144.keithw.org", "http");
-  con.Write("GET /hello HTTP/1.1\r\nHost: cs144.keithw.org\r\n\r\n");
-  con.Read();
-  std::cout<<con.readbuf_<<std::endl;
-  // get
-  //   memset(buf, '\0', strlen(buf));
-  //   write(fd, "get 1", strlen("get 1"));
-  //   rec = recv(fd, buf, sizeof(buf), 0);
-  //   buf[rec] = '\0';
-  //   std::cout << buf << std::endl;
-  //   // del
-  //   memset(buf, '\0', strlen(buf));
-  //   write(fd, "del 1", strlen("del 1"));
-  //   rec = recv(fd, buf, sizeof(buf), 0);
-  //   buf[rec] = '\0';
-  //   std::cout << buf << std::endl;
-
-  //   // get
-  //   memset(buf, '\0', strlen(buf));
-  //   write(fd, "get 1", strlen("get 1"));
-  //   rec = recv(fd, buf, sizeof(buf), 0);
-  //   buf[rec] = '\0';
-  //   std::cout << buf << std::endl;
+  //   con.Connect("127.0.0.1",4000);
+  //   con.Write("hello");
+  //   con.Read();
+  //   std::cout<<con.readbuf_<<std::endl;
 }
