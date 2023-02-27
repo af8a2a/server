@@ -95,7 +95,27 @@ void Et(int sockfd) {
     }
   }
 }
-
+void handleReadEvent(int sockfd){
+    char buf[BUFFER_SIZE];
+    while(true){    //由于使用非阻塞IO，读取客户端buffer，一次读取buf大小数据，直到全部读取完毕
+        bzero(&buf, sizeof(buf));
+        ssize_t bytes_read = read(sockfd, buf, sizeof(buf));
+        if(bytes_read > 0){
+            printf("message from client fd %d: %s\n", sockfd, buf);
+            write(sockfd, buf, sizeof(buf));
+        } else if(bytes_read == -1 && errno == EINTR){  //客户端正常中断、继续读取
+            printf("continue reading");
+            continue;
+        } else if(bytes_read == -1 && ((errno == EAGAIN) || (errno == EWOULDBLOCK))){//非阻塞IO，这个条件表示数据全部读取完毕
+            printf("finish reading once, errno: %d\n", errno);
+            break;
+        } else if(bytes_read == 0){  //EOF，客户端断开连接
+            printf("EOF, client fd %d disconnected\n", sockfd);
+            close(sockfd);   //关闭socket会自动将文件描述符从epoll树上移除
+            break;
+        }
+    }
+}
 auto main(int argc, char *argv[]) -> int {
   // Socket初始化
 
@@ -104,7 +124,7 @@ auto main(int argc, char *argv[]) -> int {
   server.Listen(true);
 
   Epoll ep(1000, 5);
-
+    server.SetNonBlocking();
   // 设置处理的
   //  文件描述符,设置为非阻塞
   ep.Addfd(server.GetFd(), true);
@@ -124,9 +144,9 @@ auto main(int argc, char *argv[]) -> int {
 
         client_sock.SetNonBlocking();
 
-        ep.Addfd(server.GetFd(), EPOLLIN | EPOLLET);
+        ep.Addfd(client_sock.GetFd(), EPOLLIN | EPOLLET);
       } else if (events[i].events & EPOLLIN) {  //可读事件
-        Et(events[i].data.fd);
+        handleReadEvent(events[i].data.fd);
       } else {  //其他事件，之后的版本实现
         printf("something else happened\n");
       }

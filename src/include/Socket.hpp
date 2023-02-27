@@ -161,13 +161,14 @@ auto Connect(const std::string &Address, const std::string &service) -> int {
 }
 class ServerSocket {
  public:
-  ServerSocket() { fd_ = -1; }
-  explicit ServerSocket(int fd) {
-    fd_=fd;
+  ServerSocket() {
+    fd_ = socket(AF_INET, SOCK_STREAM, 0);
+    util::errif(fd_ == -1, "socket create error");
   }
+  explicit ServerSocket(int fd) { fd_ = fd; }
   void SetNonBlocking() { fcntl(fd_, F_SETFL, fcntl(fd_, F_GETFL) | O_NONBLOCK); }
 
-  auto Accept(InetAddress* addr) -> int {
+  auto Accept(InetAddress *addr) -> int {
     int clnt_sockfd = ::accept(fd_, reinterpret_cast<sockaddr *>(&addr->addr), &addr->addr_len);
     util::errif(clnt_sockfd == -1, "socket accept error");
     return clnt_sockfd;
@@ -183,20 +184,17 @@ class ServerSocket {
     addr_.sin_addr.s_addr = inet_addr(ip.c_str());
     addr_.sin_port = htons(port);
     addr_len_ = sizeof(addr_);
+    int success = bind(fd_, reinterpret_cast<sockaddr *>(&addr_), addr_len_);
+    util::errif(success == -1, "socket bind error");
   }
   void Listen(bool isNonBlocking) {
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     int success = -1;
-    success = bind(sockfd, reinterpret_cast<sockaddr *>(&addr_), addr_len_);
-    assert(success != -1);
-
-    success = listen(sockfd, SOMAXCONN);
+    success = listen(fd_, SOMAXCONN);
     assert(success != -1);
 
     if (isNonBlocking) {
       SetNonBlocking();
     }
-    fd_ = sockfd;
   }
   auto GetFd() -> int { return fd_; }
 

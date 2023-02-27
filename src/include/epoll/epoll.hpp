@@ -27,14 +27,16 @@ class Epoll {
   /*将文件描述符fd上的EPOLLIN注册到epollfd指示的epoll内核事件表中，参数
 enable_et指定是否对fd启用ET模式*/
   void Addfd(int fd, bool enable_et) {
+
     epoll_event event;
+    bzero(&event, sizeof(event));
     event.data.fd = fd;
     event.events = EPOLLIN;
     if (enable_et) {
       event.events |= EPOLLET;
     }
+    util::errif(epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, fd, &event) == -1, "epoll add event error");
 
-    epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, fd, &event);
     
   }
 

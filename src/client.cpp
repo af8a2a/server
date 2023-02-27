@@ -32,10 +32,10 @@ auto main(int argc, char *argv[]) -> int {
     cmd.emplace_back(argv[i]);
   }
   // put
-test();
-//   for (int i = 0; i < 5; i++) {
-//     std::thread(test).detach();
-//   }
+// test();
+  for (int i = 0; i < 5; i++) {
+    std::thread(test).detach();
+  }
   //   Conn con;
   // //   int fd;
 
