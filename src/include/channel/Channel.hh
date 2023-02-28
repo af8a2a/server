@@ -12,7 +12,7 @@ private:
     bool inEpoll{false};
     std::function<void()> callback;
 public:
-    Channel(EventLoop *_loop, int _fd): loop_(_loop), fd(_fd){};
+    Channel(EventLoop *_loop, int _fd);
     ~Channel();
     void handleEvent();
     void enableReading();

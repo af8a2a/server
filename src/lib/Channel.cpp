@@ -5,7 +5,7 @@
 #include "epoll/epoll.hh"
 #include "eventloop/Eventloop.hh"
 
-
+Channel::Channel(EventLoop *_loop, int _fd): loop_(_loop), fd(_fd){};
 void Channel::handleEvent(){
     callback();
 }

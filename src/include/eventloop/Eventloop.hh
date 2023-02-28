@@ -1,14 +1,15 @@
 #pragma once
-#include "channel/Channel.hh"
-#include "epoll/epoll.hh"
+
+class Epoll;
+class Channel;
 class EventLoop {
  private:
   Epoll *ep_{nullptr};
   bool quit_{false};
 
  public:
-  EventLoop() { ep_ = new Epoll(); }
-  ~EventLoop() { delete ep_; }
+  EventLoop();
+  ~EventLoop();
 
   void loop();
   void UpdateChannel(Channel *ch);
