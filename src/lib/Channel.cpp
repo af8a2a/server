@@ -1,9 +1,8 @@
 
 #include <utility>
-
-#include "channel/Channel.hh"
-#include "epoll/epoll.hh"
-#include "eventloop/Eventloop.hh"
+#include "Channel.hh"
+#include "epoll.hh"
+#include "Eventloop.hh"
 
 Channel::Channel(EventLoop *_loop, int _fd): loop_(_loop), fd(_fd){};
 void Channel::handleEvent(){
@@ -33,10 +32,9 @@ auto Channel::getInEpoll() -> bool{
 void Channel::setInEpoll(){
     inEpoll = true;
 }
-
-// void Channel::setEvents(uint32_t _ev){
-//     events = _ev;
-// }
+Channel::~Channel() {
+    delete loop_;
+}
 
 void Channel::setRevents(uint32_t _ev){
     revents = _ev;

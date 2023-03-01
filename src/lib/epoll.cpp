@@ -1,8 +1,8 @@
-#include "epoll/epoll.hh"
+#include "epoll.hh"
 #include <strings.h>
 #include <unistd.h>
-#include "channel/Channel.hh"
-#include "util/util.hpp"
+#include "Channel.hh"
+#include "util.hpp"
 Epoll::Epoll() : epoll_fd_(-1), event_(nullptr) {
   epoll_fd_ = epoll_create1(0);
   util::errif(epoll_fd_ == -1, "epoll create error");

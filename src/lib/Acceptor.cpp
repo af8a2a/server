@@ -1,6 +1,6 @@
-#include "server/Acceptor.hh"
+#include "Acceptor.hh"
 #include "Socket.hpp"
-#include "channel/Channel.hh"
+#include "Channel.hh"
 
 
 Acceptor::Acceptor(EventLoop *_loop) : loop(_loop)
@@ -12,6 +12,11 @@ Acceptor::Acceptor(EventLoop *_loop) : loop(_loop)
     std::function<void()> cb = [this] { acceptConnection(); };
     acceptChannel->setCallback(cb);
     acceptChannel->enableReading();
+}
+Acceptor::~Acceptor(){
+    delete sock;
+    delete addr;
+    delete acceptChannel;
 }
 
 

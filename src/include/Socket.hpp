@@ -8,8 +8,8 @@
 #include <cassert>
 #include <cstring>
 #include <iostream>
-#include "util/InetAddress.hpp"
-#include "util/util.hpp"
+#include "InetAddress.hpp"
+#include "util.hpp"
 class Socket {
  public:
   int fd_;
@@ -110,6 +110,12 @@ class ServerSocket {
   ServerSocket() {
     fd_ = socket(AF_INET, SOCK_STREAM, 0);
     util::errif(fd_ == -1, "socket create error");
+  }
+  ~ServerSocket() {
+    if (fd_ != -1) {
+      close(fd_);
+      fd_=-1;
+    }
   }
   explicit ServerSocket(int fd) { fd_ = fd; }
   void SetNonBlocking() { fcntl(fd_, F_SETFL, fcntl(fd_, F_GETFL) | O_NONBLOCK); }

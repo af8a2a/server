@@ -1,8 +1,8 @@
-#include "server/Server.hh"
+#include "Server.hh"
 #include "Socket.hpp"
-#include "server/Acceptor.hh"
-#include "util/InetAddress.hpp"
-#include "channel/Channel.hh"
+#include "Acceptor.hh"
+#include "InetAddress.hpp"
+#include "Channel.hh"
 
 
 #define READ_BUFFER 1024
