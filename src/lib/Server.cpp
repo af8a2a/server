@@ -1,25 +1,16 @@
 #include "server/Server.hh"
 #include "Socket.hpp"
+#include "server/Acceptor.hh"
 #include "util/InetAddress.hpp"
 #include "channel/Channel.hh"
-#include <cerrno>
-#include <cstdio>
-#include <functional>
-#include <cstring>
-#include <unistd.h>
+
 
 #define READ_BUFFER 1024
 
-Server::Server(EventLoop *_loop) : loop(_loop){    
-    auto *serv_sock = new ServerSocket();
-    serv_sock->Bind("127.0.0.1", 8080);
-    serv_sock->Listen(true); 
-       
-    auto *servChannel = new Channel(loop, serv_sock->GetFd());
-    std::function<void()> cb = [this, serv_sock] { newConnection(serv_sock); };
-    servChannel->setCallback(cb);
-    servChannel->enableReading();
-
+Server::Server(EventLoop *_loop) : loop(_loop) , acceptor(nullptr){
+    acceptor=new Acceptor(loop);
+    std::function<void(ServerSocket*)> cb = [this](auto && PH1) { newConnection(std::forward<decltype(PH1)>(PH1)); };
+    acceptor->setNewConnectionCallback(cb);
 }
 
 void Server::handleReadEvent(int sockfd){
