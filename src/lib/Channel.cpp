@@ -1,19 +1,43 @@
 
-#include <utility>
 #include "Channel.hh"
-#include "epoll.hh"
+#include <unistd.h>
+#include <utility>
 #include "Eventloop.hh"
+#include "epoll.hh"
 
-Channel::Channel(EventLoop *_loop, int _fd): loop_(_loop), fd(_fd){};
-void Channel::handleEvent(){
-    callback();
+Channel::Channel(EventLoop *_loop, int _fd)
+    : loop(_loop), fd(_fd), events(0), ready(0), inEpoll(false), useThreadPool(true){};
+void Channel::handleEvent() {
+  if (ready & (EPOLLIN | EPOLLPRI)) {
+    if (useThreadPool) {
+      loop->addThread(readCallback);
+    } else {
+      readCallback();
+    }
+  }
+  if (ready & (EPOLLOUT)) {
+    if (useThreadPool) {
+      loop->addThread(writeCallback);
+    } else {
+      writeCallback();
+    }
+  }
 }
 
 void Channel::enableReading(){
-    events = EPOLLIN | EPOLLET;
-    loop_->UpdateChannel(this);
+    events |= EPOLLIN | EPOLLPRI;
+    loop->UpdateChannel(this);
 }
-
+Channel::~Channel() {
+        if(fd != -1){
+        close(fd);
+        fd = -1;
+    }
+}
+void Channel::useET(){
+    events |= EPOLLET;
+    loop->UpdateChannel(this);
+}
 auto Channel::getFd() -> int{
     return fd;
 }
@@ -21,25 +45,25 @@ auto Channel::getFd() -> int{
 auto Channel::getEvents() -> uint32_t{
     return events;
 }
-auto Channel::getRevents() -> uint32_t{
-    return revents;
+auto Channel::getReady() -> uint32_t{
+    return ready;
 }
 
 auto Channel::getInEpoll() -> bool{
     return inEpoll;
 }
 
-void Channel::setInEpoll(){
-    inEpoll = true;
-}
-Channel::~Channel() {
-    delete loop_;
+void Channel::setInEpoll(bool _in){
+    inEpoll = _in;
 }
 
-void Channel::setRevents(uint32_t _ev){
-    revents = _ev;
+void Channel::setReady(uint32_t _ev){
+    ready = _ev;
 }
 
-void Channel::setCallback(std::function<void()> _cb){
-    callback = std::move(_cb);
+void Channel::setReadCallback(std::function<void()> _cb){
+    readCallback = std::move(_cb);
+}
+void Channel::setUseThreadPool(bool use){
+    useThreadPool = use;
 }

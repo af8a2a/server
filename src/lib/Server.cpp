@@ -14,7 +14,9 @@ Server::Server(EventLoop *_loop) : loop(_loop) , acceptor(nullptr){
     std::function<void(ServerSocket*)> cb = [this](auto && PH1) { newConnection(std::forward<decltype(PH1)>(PH1)); };
     acceptor->setNewConnectionCallback(cb);
 }
-
+Server::~Server(){
+    delete acceptor;
+}
 void Server::handleReadEvent(int sockfd){
     char buf[READ_BUFFER];
     while(true){    //由于使用非阻塞IO，读取客户端buffer，一次读取buf大小数据，直到全部读取完毕
@@ -37,19 +39,24 @@ void Server::handleReadEvent(int sockfd){
     }
 }
 void Server::newConnection(ServerSocket *serv_sock){
-    auto *clnt_addr = new InetAddress();      //会发生内存泄露！没有delete
-    auto *clnt_sock = new ServerSocket(serv_sock->Accept(clnt_addr));       //会发生内存泄露！没有delete
-    printf("new client fd %d! IP: %s Port: %d\n", clnt_sock->GetFd(), inet_ntoa(clnt_addr->addr.sin_addr), ntohs(clnt_addr->addr.sin_port));
-    clnt_sock->SetNonBlocking();
-    auto *clntChannel = new Channel(loop, clnt_sock->GetFd());
-    std::function<void()> cb = [this, capture0 = clnt_sock->GetFd()] { handleReadEvent(capture0); };
-    clntChannel->setCallback(cb);
-    clntChannel->enableReading();
+    if(serv_sock->GetFd() != -1){
+        auto *conn = new Connection(loop, serv_sock);
+        std::function<void(int)> cb = [this](auto && PH1) { deleteConnection(std::forward<decltype(PH1)>(PH1)); };
+        conn->setDeleteConnectionCallback(cb);
+        connections[serv_sock->GetFd()] = conn;
+    }
+
 }
 
-void Server::deleteConnection(ServerSocket * sock){
-    Connection *conn = connections[sock->GetFd()];
-    connections.erase(sock->GetFd());
-    delete conn;
-    
+void Server::deleteConnection(int sockfd){
+    if(sockfd != -1){
+        auto it = connections.find(sockfd);
+        if(it != connections.end()){
+            Connection *conn = connections[sockfd];
+            connections.erase(sockfd);
+            // close(sockfd);       //正常
+            delete conn;         //会Segmant fault
+        }
+    }
+
 }

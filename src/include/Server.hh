@@ -10,11 +10,10 @@ class Server {
   EventLoop *loop;
   Acceptor *acceptor;
   std::map<int, Connection *> connections;
-  // Acceptor *acceptor;
  public:
   explicit Server(EventLoop *_loop);
   ~Server();
   void handleReadEvent(int);
   void newConnection(ServerSocket *serv_sock);
-  void deleteConnection(ServerSocket * sock);
+  void deleteConnection(int sockfd);
 };

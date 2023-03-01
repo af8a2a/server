@@ -118,6 +118,7 @@ class ServerSocket {
     }
   }
   explicit ServerSocket(int fd) { fd_ = fd; }
+  
   void SetNonBlocking() { fcntl(fd_, F_SETFL, fcntl(fd_, F_GETFL) | O_NONBLOCK); }
 
   auto Accept(InetAddress *addr) -> int {

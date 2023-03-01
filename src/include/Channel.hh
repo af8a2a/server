@@ -2,29 +2,33 @@
 #include <sys/epoll.h>
 #include <functional>
 class EventLoop;
-class Channel
-{
-private:
-    EventLoop *loop_;
-    int fd;
-    uint32_t events{0};
-    uint32_t revents{0};
-    bool inEpoll{false};
-    std::function<void()> callback;
-public:
-    Channel(EventLoop *_loop, int _fd);
-    ~Channel();
-    void handleEvent();
-    void enableReading();
+class Channel {
+ private:
+  EventLoop *loop;
+  int fd;
+  uint32_t events;
+  uint32_t ready;
+  ;
+  bool inEpoll;
+  bool useThreadPool;
+  std::function<void()> readCallback;
+  std::function<void()> writeCallback;
 
-    auto getFd() -> int;
-    auto getEvents() -> uint32_t;
-    auto getRevents() -> uint32_t;
-    auto getInEpoll() -> bool;
-    void setInEpoll();
+ public:
+  Channel(EventLoop *_loop, int _fd);
+  ~Channel();
+  void handleEvent();
+  void enableReading();
 
-    // void setEvents(uint32_t);
-    void setRevents(uint32_t);
-    void setCallback(std::function<void()>);
+  auto getFd() -> int;
+  auto getEvents() -> uint32_t;
+  auto getReady() -> uint32_t;
+
+  auto getInEpoll() -> bool;
+  void setInEpoll(bool _in = true);
+  void useET();
+
+  void setReady(uint32_t);
+  void setReadCallback(std::function<void()>);
+  void setUseThreadPool(bool use = true);
 };
-

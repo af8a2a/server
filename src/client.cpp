@@ -15,7 +15,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include "Conn.hpp"
 #include "Socket.hpp"
 #define PORT "3490"      // Client 所要连接的 port
 #define MAXDATASIZE 100  // 我们一次可以收到的最大字节数量（number of bytes）
@@ -23,7 +22,8 @@
 //与服务器取得连接，返回描述符
 void test() {
   Socket con;
-  con.Connect("127.0.0.1", 8080);
+  con.Connect("127.0.0.1", 8000);
+  sleep(10);
   con.Write("hell");
 }
 auto main(int argc, char *argv[]) -> int {
@@ -32,10 +32,11 @@ auto main(int argc, char *argv[]) -> int {
     cmd.emplace_back(argv[i]);
   }
   // put
- test();
-//   for (int i = 0; i < 5; i++) {
-//     std::thread(test).detach();
-//   }
+//  test();
+  for (int i = 0; i < 10000; i++) {
+    std::thread(test).detach();
+  }
+  getchar();
   //   Conn con;
   // //   int fd;
 
