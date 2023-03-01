@@ -131,6 +131,8 @@ class ServerSocket {
     return clnt_sockfd;
   }
   void Bind(const std::string &ip, uint16_t port) {
+    sockaddr_in addr_;
+    socklen_t addr_len_;
     bzero(&addr_, sizeof(addr_));
     addr_.sin_family = AF_INET;
     addr_.sin_addr.s_addr = inet_addr(ip.c_str());
@@ -152,6 +154,4 @@ class ServerSocket {
 
  private:
   int fd_;
-  struct sockaddr_in addr_;
-  socklen_t addr_len_;
 };

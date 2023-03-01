@@ -1,11 +1,13 @@
 #include "Server.hh"
+#include <arpa/inet.h>
 #include "Socket.hpp"
 #include "Acceptor.hh"
 #include "InetAddress.hpp"
 #include "Channel.hh"
-
+#include "Connection.hh"
 
 #define READ_BUFFER 1024
+
 
 Server::Server(EventLoop *_loop) : loop(_loop) , acceptor(nullptr){
     acceptor=new Acceptor(loop);
@@ -34,7 +36,6 @@ void Server::handleReadEvent(int sockfd){
         }
     }
 }
-
 void Server::newConnection(ServerSocket *serv_sock){
     auto *clnt_addr = new InetAddress();      //会发生内存泄露！没有delete
     auto *clnt_sock = new ServerSocket(serv_sock->Accept(clnt_addr));       //会发生内存泄露！没有delete
@@ -44,4 +45,11 @@ void Server::newConnection(ServerSocket *serv_sock){
     std::function<void()> cb = [this, capture0 = clnt_sock->GetFd()] { handleReadEvent(capture0); };
     clntChannel->setCallback(cb);
     clntChannel->enableReading();
+}
+
+void Server::deleteConnection(ServerSocket * sock){
+    Connection *conn = connections[sock->GetFd()];
+    connections.erase(sock->GetFd());
+    delete conn;
+    
 }
