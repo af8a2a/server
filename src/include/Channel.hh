@@ -10,7 +10,6 @@ class Channel {
   uint32_t ready;
   ;
   bool inEpoll;
-  bool useThreadPool;
   std::function<void()> readCallback;
   std::function<void()> writeCallback;
 
@@ -30,5 +29,4 @@ class Channel {
 
   void setReady(uint32_t);
   void setReadCallback(std::function<void()>);
-  void setUseThreadPool(bool use = true);
 };

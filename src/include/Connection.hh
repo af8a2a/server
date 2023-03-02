@@ -12,7 +12,6 @@ private:
     ServerSocket *sock;
     Channel *channel;
     std::function<void(int)> deleteConnectionCallback;
-    std::string *inBuffer;
     Buffer *readBuffer;
 public:
     Connection(EventLoop *_loop, ServerSocket *_sock);

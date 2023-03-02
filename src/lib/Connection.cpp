@@ -13,13 +13,12 @@ Connection::~Connection() {
   delete readBuffer;
 }
 Connection::Connection(EventLoop *_loop, ServerSocket *_sock)
-    : loop(_loop), sock(_sock), channel(nullptr), inBuffer(new std::string()) {
+    : loop(_loop), sock(_sock), channel(nullptr) {
   channel = new Channel(loop, sock->GetFd());
   channel->enableReading();
   channel->useET();
   std::function<void()> cb = [this, capture0 = sock->GetFd()] { echo(capture0); };
   channel->setReadCallback(cb);
-  channel->setUseThreadPool(true);
   readBuffer = new Buffer();
 }
 

@@ -3,13 +3,12 @@
 #include "Channel.hh"
 #include "epoll.hh"
 #include "threadpool.hh"
-EventLoop::EventLoop() : threadPool(nullptr), ep_(nullptr), quit_(false) {
+EventLoop::EventLoop() : ep_(nullptr), quit_(false) {
   ep_ = new Epoll();
-  threadPool = new ThreadPool();
+  
 }
 EventLoop::~EventLoop() {
   delete ep_;
-  delete threadPool;
 }
 void EventLoop::loop() {
   while (!quit_) {
@@ -22,6 +21,3 @@ void EventLoop::loop() {
 }
 void EventLoop::UpdateChannel(Channel *ch) { ep_->UpdateChannel(ch); }
 
-void EventLoop::addThread(const std::function<void()>& func) {
-  threadPool->add(func);
-}

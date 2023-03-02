@@ -6,22 +6,14 @@
 #include "epoll.hh"
 
 Channel::Channel(EventLoop *_loop, int _fd)
-    : loop(_loop), fd(_fd), events(0), ready(0), inEpoll(false), useThreadPool(true){};
+    : loop(_loop), fd(_fd), events(0), ready(0), inEpoll(false){};
 void Channel::handleEvent() {
-  if (ready & (EPOLLIN | EPOLLPRI)) {
-    if (useThreadPool) {
-      loop->addThread(readCallback);
-    } else {
-      readCallback();
+    if(ready & (EPOLLIN | EPOLLPRI)){
+        readCallback();
     }
-  }
-  if (ready & (EPOLLOUT)) {
-    if (useThreadPool) {
-      loop->addThread(writeCallback);
-    } else {
-      writeCallback();
+    if(ready & (EPOLLOUT)){
+        writeCallback();
     }
-  }
 }
 
 void Channel::enableReading(){
@@ -63,7 +55,4 @@ void Channel::setReady(uint32_t _ev){
 
 void Channel::setReadCallback(std::function<void()> _cb){
     readCallback = std::move(_cb);
-}
-void Channel::setUseThreadPool(bool use){
-    useThreadPool = use;
 }

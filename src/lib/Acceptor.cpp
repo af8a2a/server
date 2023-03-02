@@ -2,7 +2,7 @@
 #include "Channel.hh"
 #include "Socket.hpp"
 
-Acceptor::Acceptor(EventLoop *_loop) : loop(_loop) {
+Acceptor::Acceptor(EventLoop *_loop) : loop(_loop),sock(nullptr),acceptChannel(nullptr) {
   sock = new ServerSocket();
   sock->Bind("127.0.0.1", 8000);
   sock->Listen(true);
@@ -10,11 +10,9 @@ Acceptor::Acceptor(EventLoop *_loop) : loop(_loop) {
   std::function<void()> cb = [this] { acceptConnection(); };
   acceptChannel->setReadCallback(cb);
   acceptChannel->enableReading();
-  acceptChannel->setUseThreadPool(false);
 }
 Acceptor::~Acceptor() {
   delete sock;
-  delete addr;
   delete acceptChannel;
 }
 
