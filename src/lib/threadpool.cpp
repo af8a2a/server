@@ -1,34 +1,34 @@
 #include "threadpool.hh"
 
-ThreadPool::ThreadPool(int size) : stop(false){
-    for(int i = 0; i < size; ++i){
-        threads.emplace_back([this](){
-            while(true){
-                std::function<void()> task;
-                {
-                    std::unique_lock<std::mutex> lock(tasks_mtx);
-                    cv.wait(lock, [this](){
-                        return stop || !tasks.empty();
-                    });
-                    if(stop && tasks.empty()) return;
-                    task = tasks.front();
-                    tasks.pop();
-                }
-                task();
-            }
-        });
-    }
+ThreadPool::ThreadPool(unsigned int size) {
+  for (unsigned int i = 0; i < size; ++i) {
+    workers_.emplace_back([this]() {
+      while (true) {
+        std::function<void()> task;
+        {
+          std::unique_lock<std::mutex> lock(queue_mutex_);
+          condition_variable_.wait(lock, [this]() { return stop_ || !tasks_.empty(); });
+          if (stop_ && tasks_.empty()) {
+            return;
+          }
+          task = tasks_.front();
+          tasks_.pop();
+        }
+        task();
+      }
+    });
+  }
 }
 
-ThreadPool::~ThreadPool(){
-    {
-        std::unique_lock<std::mutex> lock(tasks_mtx);
-        stop = true;
+ThreadPool::~ThreadPool() {
+  {
+    std::unique_lock<std::mutex> lock(queue_mutex_);
+    stop_ = true;
+  }
+  condition_variable_.notify_all();
+  for (std::thread &pth : workers_) {
+    if (pth.joinable()) {
+      pth.join();
     }
-    cv.notify_all();
-    for(std::thread &th : threads){
-        if(th.joinable()) {
-            th.join();
-}
-    }
+  }
 }

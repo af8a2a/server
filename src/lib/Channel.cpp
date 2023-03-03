@@ -5,54 +5,43 @@
 #include "Eventloop.hh"
 #include "epoll.hh"
 
-Channel::Channel(EventLoop *_loop, int _fd)
-    : loop(_loop), fd(_fd), events(0), ready(0), inEpoll(false){};
-void Channel::handleEvent() {
-    if(ready & (EPOLLIN | EPOLLPRI)){
-        readCallback();
-    }
-    if(ready & (EPOLLOUT)){
-        writeCallback();
-    }
-}
+Channel::Channel(EventLoop *loop, int _fd)
+    : loop_(loop), fd_(_fd), listen_events_(0), ready_events_(0), in_epoll_(false) {}
 
-void Channel::enableReading(){
-    events |= EPOLLIN | EPOLLPRI;
-    loop->UpdateChannel(this);
-}
 Channel::~Channel() {
-        if(fd != -1){
-        close(fd);
-        fd = -1;
-    }
-}
-void Channel::useET(){
-    events |= EPOLLET;
-    loop->UpdateChannel(this);
-}
-auto Channel::getFd() -> int{
-    return fd;
+  if (fd_ != -1) {
+    close(fd_);
+    fd_ = -1;
+  }
 }
 
-auto Channel::getEvents() -> uint32_t{
-    return events;
-}
-auto Channel::getReady() -> uint32_t{
-    return ready;
-}
-
-auto Channel::getInEpoll() -> bool{
-    return inEpoll;
+void Channel::HandleEvent() {
+  if (ready_events_ & (EPOLLIN | EPOLLPRI)) {
+    read_callback_();
+  }
+  if (ready_events_ & (EPOLLOUT)) {
+    write_callback_();
+  }
 }
 
-void Channel::setInEpoll(bool _in){
-    inEpoll = _in;
+void Channel::EnableRead() {
+  listen_events_ |= EPOLLIN | EPOLLPRI;
+  loop_->UpdateChannel(this);
 }
 
-void Channel::setReady(uint32_t _ev){
-    ready = _ev;
+void Channel::UseET() {
+  listen_events_ |= EPOLLET;
+  loop_->UpdateChannel(this);
 }
+int Channel::GetFd() { return fd_; }
 
-void Channel::setReadCallback(std::function<void()> _cb){
-    readCallback = std::move(_cb);
-}
+uint32_t Channel::GetListenEvents() { return listen_events_; }
+uint32_t Channel::GetReadyEvents() { return ready_events_; }
+
+bool Channel::GetInEpoll() { return in_epoll_; }
+
+void Channel::SetInEpoll(bool setting) { in_epoll_ = setting; }
+
+void Channel::SetReadyEvents(uint32_t event) { ready_events_ = event; }
+
+void Channel::SetReadCallback(std::function<void()> const &callback) { read_callback_ = callback; }

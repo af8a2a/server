@@ -4,15 +4,20 @@
 class Epoll;
 class Channel;
 class ThreadPool;
-class EventLoop {
- private:
-  Epoll *ep_;
-  bool quit_;
 
+class EventLoop {
  public:
   EventLoop();
+  EventLoop(const EventLoop &) = default;
+  EventLoop(EventLoop &&) = delete;
+  EventLoop &operator=(const EventLoop &) = default;
+  EventLoop &operator=(EventLoop &&) = delete;
   ~EventLoop();
 
-  void loop();
-  void UpdateChannel(Channel *ch);
+  void Loop();
+  void UpdateChannel(Channel *channel);
+
+ private:
+  Epoll *epoll_{nullptr};
+  bool quit_{false};
 };

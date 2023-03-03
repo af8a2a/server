@@ -1,29 +1,31 @@
 #include "Acceptor.hh"
+#include <cstdio>
 #include "Channel.hh"
-#include "Socket.hpp"
+#include "Socket.hh"
 
-Acceptor::Acceptor(EventLoop *_loop) : loop(_loop),sock(nullptr),acceptChannel(nullptr) {
-  sock = new ServerSocket();
-  sock->Bind("127.0.0.1", 8000);
-  sock->Listen(true);
-  acceptChannel = new Channel(loop, sock->GetFd());
-  std::function<void()> cb = [this] { acceptConnection(); };
-  acceptChannel->setReadCallback(cb);
-  acceptChannel->enableReading();
+Acceptor::Acceptor(EventLoop *_loop) : loop_(_loop), sock_(new Socket()), accept_channel_(new Channel(loop_, sock_->GetFd())) {
+  InetAddress *addr = new InetAddress("127.0.0.1", 1234);
+
+  sock_->Bind(addr);
+  sock_->Listen();
+  
+  std::function<void()> callback = [this] { AcceptConnection(); };
+  accept_channel_->SetReadCallback(callback);
+  accept_channel_->EnableRead();
 }
 Acceptor::~Acceptor() {
-  delete sock;
-  delete acceptChannel;
+  delete sock_;
+  delete accept_channel_;
 }
 
-void Acceptor::acceptConnection() {
-  auto *clnt_addr = new InetAddress();
-  auto *clnt_sock = new ServerSocket(sock->Accept(clnt_addr));
-  printf("new client fd %d! IP: %s Port: %d\n", clnt_sock->GetFd(), inet_ntoa(clnt_addr->getAddr().sin_addr),
-         ntohs(clnt_addr->getAddr().sin_port));
-  clnt_sock->SetNonBlocking();
-  newConnectionCallback(clnt_sock);
+void Acceptor::AcceptConnection() {
+  InetAddress *clnt_addr = new InetAddress();
+  Socket *clnt_sock = new Socket(sock_->Accept(clnt_addr));
+  printf("new client fd %d! IP: %s Port: %d\n", clnt_sock->GetFd(), clnt_addr->GetIp(), clnt_addr->GetPort());
+  clnt_sock->SetNonBlocking();  // 新接受到的连接设置为非阻塞式
+  new_connection_callback_(clnt_sock);
   delete clnt_addr;
+
 }
 
-void Acceptor::setNewConnectionCallback(const std::function<void(ServerSocket *)> &_cb) { newConnectionCallback = _cb; }
+void Acceptor::SetNewConnectionCallback(const std::function<void(Socket *)> &_cb) { new_connection_callback_ = _cb; }

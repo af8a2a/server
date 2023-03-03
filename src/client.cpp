@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <atomic>
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
@@ -15,33 +16,23 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include "Socket.hpp"
+#include "Socket.hh"
+#include "threadpool.hh"
 #define PORT "3490"      // Client 所要连接的 port
 #define MAXDATASIZE 100  // 我们一次可以收到的最大字节数量（number of bytes）
-
 //与服务器取得连接，返回描述符
-void test() {
-  Socket con;
-  con.Connect("127.0.0.1", 8000);
-  sleep(10);
-  con.Write("hell");
-}
-auto main(int argc, char *argv[]) -> int {
-  std::vector<std::string> cmd;
-  for (int i = 1; i < argc; i++) {
-    cmd.emplace_back(argv[i]);
-  }
-  // put
-//  test();
-  for (int i = 0; i < 10000; i++) {
-    std::thread(test).detach();
-  }
-  getchar();
-  //   Conn con;
-  // //   int fd;
 
-  //   con.Connect("127.0.0.1",4000);
-  //   con.Write("hello");
-  //   con.Read();
-  //   std::cout<<con.readbuf_<<std::endl;
+
+void Print(int a, double b, const char *c, std::string const &d) { std::cout << a << b << c << d << std::endl; }
+
+void Test() { std::cout << "hellp" << std::endl; }
+
+int main(int argc, char const *argv[]) {
+  ThreadPool *poll = new ThreadPool();
+  std::function<void()> func = std::bind(Print, 1, 3.14, "hello", std::string("world"));
+  poll->Add(func);
+  func = Test;
+  poll->Add(func);
+  delete poll;
+  return 0;
 }

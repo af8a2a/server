@@ -1,12 +1,23 @@
-#include <sys/socket.h>
-#include "Socket.hpp"
+#include <Connection.hh>
+#include <Socket.hh>
+#include <iostream>
 auto main() -> int {
-  ServerSocket s;
-  s.Bind("127.0.0.1", 8080);
-  s.Listen(false);
-  int con=s.Accept();
-  char buf[1024];
-  int rec = recv(con, buf, sizeof(buf), 0);
-  buf[rec] = '\0';
-  std::cout<<buf<<std::endl;
+  Socket *sock= new Socket();
+  sock->Connect("127.0.0.1", 1234);
+
+  Connection *conn = new Connection(nullptr, sock);
+
+  while (true) {
+    conn->GetlineSendBuffer();
+    conn->Write();
+    if (conn->GetState() == Connection::State::Closed) {
+      conn->Close();
+      break;
+    }
+    conn->Read();
+    std::cout << "Message from server: " << conn->ReadBuffer() << std::endl;
+  }
+
+  delete conn;
+  return 0;
 }

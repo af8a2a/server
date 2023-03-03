@@ -2,31 +2,38 @@
 #include <sys/epoll.h>
 #include <functional>
 class EventLoop;
+
+class Socket;
+class EventLoop;
 class Channel {
- private:
-  EventLoop *loop;
-  int fd;
-  uint32_t events;
-  uint32_t ready;
-  ;
-  bool inEpoll;
-  std::function<void()> readCallback;
-  std::function<void()> writeCallback;
-
  public:
-  Channel(EventLoop *_loop, int _fd);
+  Channel(const Channel &) = default;
+  Channel(Channel &&) = delete;
+  Channel &operator=(const Channel &) = default;
+  Channel &operator=(Channel &&) = delete;
+  Channel(EventLoop *loop, int _fd);
   ~Channel();
-  void handleEvent();
-  void enableReading();
 
-  auto getFd() -> int;
-  auto getEvents() -> uint32_t;
-  auto getReady() -> uint32_t;
 
-  auto getInEpoll() -> bool;
-  void setInEpoll(bool _in = true);
-  void useET();
+  void HandleEvent();
+  void EnableRead();
 
-  void setReady(uint32_t);
-  void setReadCallback(std::function<void()>);
+  int GetFd();
+  uint32_t GetListenEvents();
+  uint32_t GetReadyEvents();
+  bool GetInEpoll();
+  void SetInEpoll(bool setting = true);
+  void UseET();
+
+  void SetReadyEvents(uint32_t event);
+  void SetReadCallback(std::function<void()> const &callback);
+
+ private:
+  EventLoop *loop_;
+  int fd_;
+  uint32_t listen_events_;
+  uint32_t ready_events_;
+  bool in_epoll_;
+  std::function<void()> read_callback_;
+  std::function<void()> write_callback_;
 };
