@@ -2,6 +2,7 @@
 #include <string>
 
 #include <functional>
+#include "Macros.h"
 
 class EventLoop;
 class Socket;
@@ -16,12 +17,9 @@ class Connection {
     Closed,
     Failed,
   };
-  Connection(const Connection &) = default;
-  Connection(Connection &&) = delete;
-  Connection &operator=(const Connection &) = default;
-  Connection &operator=(Connection &&) = delete;
   Connection(EventLoop *loop, Socket *sock);
   ~Connection();
+  DISALLOW_COPY_AND_MOVE(Connection);
 
   void Read();
   void Write();

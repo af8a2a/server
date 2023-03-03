@@ -4,15 +4,14 @@
 #include <utility>
 #include "Eventloop.hh"
 #include "epoll.hh"
-
-Channel::Channel(EventLoop *loop, int _fd)
-    : loop_(loop), fd_(_fd), listen_events_(0), ready_events_(0), in_epoll_(false) {}
+const int Channel::READ_EVENT = 1;
+const int Channel::WRITE_EVENT = 2;
+const int Channel::ET = 4;//NOLINT
+Channel::Channel(EventLoop *loop, Socket *socket)
+    : loop_(loop), socket_(socket), listen_events_(0), ready_events_(0),in_epoll_(false){}
 
 Channel::~Channel() {
-  if (fd_ != -1) {
-    close(fd_);
-    fd_ = -1;
-  }
+loop_->DeleteChannel(this);
 }
 
 void Channel::HandleEvent() {
@@ -23,9 +22,15 @@ void Channel::HandleEvent() {
     write_callback_();
   }
 }
+Socket *Channel::GetSocket() { return socket_; }
 
 void Channel::EnableRead() {
   listen_events_ |= EPOLLIN | EPOLLPRI;
+  loop_->UpdateChannel(this);
+}
+
+void Channel::EnableWrite() {
+  listen_events_ |= WRITE_EVENT;
   loop_->UpdateChannel(this);
 }
 
@@ -33,7 +38,7 @@ void Channel::UseET() {
   listen_events_ |= EPOLLET;
   loop_->UpdateChannel(this);
 }
-int Channel::GetFd() { return fd_; }
+
 
 uint32_t Channel::GetListenEvents() { return listen_events_; }
 uint32_t Channel::GetReadyEvents() { return ready_events_; }

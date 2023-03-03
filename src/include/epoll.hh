@@ -1,16 +1,15 @@
 #pragma once
 #include <sys/epoll.h>
 #include <vector>
+#include "Macros.h"
 
 class Channel;
 class Epoll {
  public:
   Epoll();
-  Epoll(const Epoll &) = default;
-  Epoll(Epoll &&) = delete;
-  Epoll &operator=(const Epoll &) = default;
-  Epoll &operator=(Epoll &&) = delete;
+
   ~Epoll();
+  DISALLOW_COPY_AND_MOVE(Epoll);
   void UpdateChannel(Channel *channel);
   void DeleteChannel(Channel *channel);
 

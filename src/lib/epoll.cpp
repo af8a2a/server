@@ -4,6 +4,7 @@
 #include <cstring>
 #include "Channel.hh"
 #include "util.hpp"
+#include "Socket.hh"
 #define MAX_EVENTS 1000
 Epoll::Epoll() : epfd_(epoll_create1(0)), events_(new epoll_event[MAX_EVENTS]) {
   
@@ -33,10 +34,18 @@ std::vector<Channel *> Epoll::Poll(int timeout) {
 }
 
 void Epoll::UpdateChannel(Channel *channel) {
-  int sockfd = channel->GetFd();
+  int sockfd = channel->GetSocket()->GetFd();
   struct epoll_event event {};
   event.data.ptr = channel;
-  event.events = channel->GetListenEvents();
+  if (channel->GetListenEvents() & Channel::READ_EVENT) {
+    event.events |= EPOLLIN | EPOLLPRI;
+  }
+  if (channel->GetListenEvents() & Channel::WRITE_EVENT) {
+    event.events |= EPOLLOUT;
+  }
+  if (channel->GetListenEvents() & Channel::ET) {
+    event.events |= EPOLLET;
+  }
   if (!channel->GetInEpoll()) {
     errif(epoll_ctl(epfd_, EPOLL_CTL_ADD, sockfd, &event) == -1, "epoll add error");
     channel->SetInEpoll();
@@ -46,7 +55,7 @@ void Epoll::UpdateChannel(Channel *channel) {
 }
 
 void Epoll::DeleteChannel(Channel *channel) {
-  int sockfd = channel->GetFd();
+  int sockfd = channel->GetSocket()->GetFd();
   errif(epoll_ctl(epfd_, EPOLL_CTL_DEL, sockfd, nullptr) == -1, "epoll delete error");
   channel->SetInEpoll(false);
 }

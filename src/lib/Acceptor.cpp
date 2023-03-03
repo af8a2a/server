@@ -3,7 +3,7 @@
 #include "Channel.hh"
 #include "Socket.hh"
 
-Acceptor::Acceptor(EventLoop *_loop) : loop_(_loop), sock_(new Socket()), accept_channel_(new Channel(loop_, sock_->GetFd())) {
+Acceptor::Acceptor(EventLoop *_loop) : loop_(_loop), sock_(new Socket()), accept_channel_(new Channel(loop_, sock_)) {
   InetAddress *addr = new InetAddress("127.0.0.1", 1234);
 
   sock_->Bind(addr);

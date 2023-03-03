@@ -16,6 +16,7 @@ class EventLoop {
 
   void Loop();
   void UpdateChannel(Channel *channel);
+  void DeleteChannel(Channel *channel);
 
  private:
   Epoll *epoll_{nullptr};

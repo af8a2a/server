@@ -11,7 +11,6 @@
 #define READ_BUFFER 1024
 
 Server::Server(EventLoop *loop) : main_reactor_(loop), acceptor_(new Acceptor(main_reactor_)), thread_pool_(nullptr) {
-  
   std::function<void(Socket *)> callback = std::bind(&Server::NewConnection, this, std::placeholders::_1);
   acceptor_->SetNewConnectionCallback(callback);
 
@@ -54,3 +53,8 @@ void Server::DeleteConnection(Socket *sock) {
 }
 
 void Server::OnConnect(std::function<void(Connection *)> func) { on_connect_callback_ = std::move(func); }
+
+
+void Server::OnMessage(std::function<void(Connection *)> func) { on_message_callback_ = std::move(func); }
+
+void Server::NewConnect(std::function<void(Connection *)> func) { new_connect_callback_ = std::move(func); }

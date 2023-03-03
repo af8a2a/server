@@ -12,7 +12,7 @@
 
 Connection::Connection(EventLoop *loop, Socket *sock) : loop_(loop), sock_(sock) {
   if (loop_ != nullptr) {
-    channel_ = new Channel(loop_, sock->GetFd());
+    channel_ = new Channel(loop_, sock);
     channel_->EnableRead();
     channel_->UseET();
   }

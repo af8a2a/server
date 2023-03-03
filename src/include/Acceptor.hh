@@ -1,5 +1,6 @@
 #pragma once
 #include <functional>
+#include "Macros.h"
 
 class EventLoop;
 class Socket;
@@ -13,12 +14,10 @@ private:
     Channel *accept_channel_;
     std::function<void(Socket*)> new_connection_callback_;
 public:
- Acceptor(const Acceptor &) = default;
- Acceptor(Acceptor &&) = delete;
- Acceptor &operator=(const Acceptor &) = default;
- Acceptor &operator=(Acceptor &&) = delete;
+
  explicit Acceptor(EventLoop *_loop);
  ~Acceptor();
+ DISALLOW_COPY_AND_MOVE(Acceptor);
  void AcceptConnection();
  void SetNewConnectionCallback(const std::function<void(Socket *)> &);
 };
