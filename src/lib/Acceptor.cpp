@@ -5,13 +5,15 @@
 
 Acceptor::Acceptor(EventLoop *_loop) : loop_(_loop), sock_(new Socket()), accept_channel_(new Channel(loop_, sock_)) {
   InetAddress *addr = new InetAddress("127.0.0.1", 1234);
-
+  
   sock_->Bind(addr);
+  // sock->setnonblocking(); acceptor使用阻塞式IO比较好
   sock_->Listen();
   
-  std::function<void()> callback = [this] { AcceptConnection(); };
+  std::function<void()> callback = std::bind(&Acceptor::AcceptConnection, this);
   accept_channel_->SetReadCallback(callback);
   accept_channel_->EnableRead();
+  delete addr;
 }
 Acceptor::~Acceptor() {
   delete sock_;
@@ -25,7 +27,6 @@ void Acceptor::AcceptConnection() {
   clnt_sock->SetNonBlocking();  // 新接受到的连接设置为非阻塞式
   new_connection_callback_(clnt_sock);
   delete clnt_addr;
-
 }
 
 void Acceptor::SetNewConnectionCallback(const std::function<void(Socket *)> &_cb) { new_connection_callback_ = _cb; }

@@ -1,11 +1,11 @@
 #pragma once
+#include <condition_variable>
 #include <functional>
-#include <vector>
+#include <future>
+#include <mutex>
 #include <queue>
 #include <thread>
-#include <mutex>
-#include <condition_variable>
-#include <future>
+#include <vector>
 #include "Macros.h"
 class ThreadPool {
  public:
@@ -15,7 +15,7 @@ class ThreadPool {
   DISALLOW_COPY_AND_MOVE(ThreadPool);
 
   template <class F, class... Args>
-  auto Add(F &&func, Args &&... args) -> std::future<typename std::result_of<F(Args...)>::type>;
+  auto Add(F &&func, Args &&...args) -> std::future<typename std::result_of<F(Args...)>::type>;
 
  private:
   std::vector<std::thread> workers_;
@@ -27,11 +27,11 @@ class ThreadPool {
 
 // 不能放在cpp文件，C++编译器不支持模版的分离编译
 template <class F, class... Args>
-auto ThreadPool::Add(F &&func, Args &&... args) -> std::future<typename std::result_of<F(Args...)>::type> {
+auto ThreadPool::Add(F &&func, Args &&...args) -> std::future<typename std::result_of<F(Args...)>::type> {
   using return_type = typename std::result_of<F(Args...)>::type;
 
-  auto task =
-      std::make_shared<std::packaged_task<return_type()>>(std::bind(std::forward<F>(func), std::forward<Args>(args)...));
+  auto task = std::make_shared<std::packaged_task<return_type()>>(
+      std::bind(std::forward<F>(func), std::forward<Args>(args)...));
 
   std::future<return_type> res = task->get_future();
   {
@@ -42,7 +42,7 @@ auto ThreadPool::Add(F &&func, Args &&... args) -> std::future<typename std::res
       throw std::runtime_error("enqueue on stopped ThreadPool");
     }
 
-    tasks_.push([task]() { (*task)(); });
+    tasks_.emplace([task]() { (*task)(); });
   }
   condition_variable_.notify_one();
   return res;

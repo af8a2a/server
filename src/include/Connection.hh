@@ -1,8 +1,7 @@
 #pragma once
-#include <string>
+#include "Macros.h"
 
 #include <functional>
-#include "Macros.h"
 
 class EventLoop;
 class Socket;
@@ -12,7 +11,7 @@ class Connection {
  public:
   enum State {
     Invalid = 1,
-    Handshaking,
+    Connecting,
     Connected,
     Closed,
     Failed,
@@ -23,9 +22,13 @@ class Connection {
 
   void Read();
   void Write();
+  void Send(const std::string &msg);
 
   void SetDeleteConnectionCallback(std::function<void(Socket *)> const &callback);
   void SetOnConnectCallback(std::function<void(Connection *)> const &callback);
+  void SetOnMessageCallback(std::function<void(Connection *)> const &callback);
+  void Business();
+
   State GetState();
   void Close();
   void SetSendBuffer(const char *str);
@@ -37,6 +40,7 @@ class Connection {
   Socket *GetSocket();
 
   void OnConnect(std::function<void()> func);
+  void OnMessage(std::function<void()> func);
 
  private:
   EventLoop *loop_;
@@ -48,6 +52,7 @@ class Connection {
   std::function<void(Socket *)> delete_connectioin_callback_;
 
   std::function<void(Connection *)> on_connect_callback_;
+  std::function<void(Connection *)> on_message_callback_;
 
   void ReadNonBlocking();
   void WriteNonBlocking();

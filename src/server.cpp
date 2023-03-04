@@ -24,22 +24,31 @@
 #include "Socket.hh"
 #include "epoll.hh"
 #include "threadpool.hh"
+#include "SignalHandler.hh"
 #define MAX_EVENT_NUMBER 1024
 #define BUFFER_SIZE 1024
 
-auto main(int argc, char *argv[]) -> int {
+auto main(int argc, char *argv[]) -> int {//NOLINT
   auto *loop = new EventLoop();
   auto *server = new Server(loop);
-  server->OnConnect([](Connection *conn) {
-    conn->Read();
-    if (conn->GetState() == Connection::State::Closed) {
-      conn->Close();
-      return;
-    }
-    std::cout << "Message from client " << conn->GetSocket()->GetFd() << ": " << conn->ReadBuffer() << std::endl;
-    conn->SetSendBuffer(conn->ReadBuffer());
-    conn->Write();
+
+  Signal(SIGINT, [&] {
+    delete server;
+    delete loop;
+    std::cout << "\nServer exit!" << std::endl;
+    exit(0);
   });
+
+  server->NewConnect(
+      [](Connection *conn) { std::cout << "New connection fd: " << conn->GetSocket()->GetFd() << std::endl; });
+
+  server->OnMessage([](Connection *conn) {
+    std::cout << "Message from client " << conn->ReadBuffer() << std::endl;
+    if (conn->GetState() == Connection::State::Connected) {
+      conn->Send(conn->ReadBuffer());
+    }
+  });
+
   loop->Loop();
   return 0;
 }

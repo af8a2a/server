@@ -16,7 +16,6 @@ Epoll::Epoll() : epfd_(epoll_create1(0)), events_(new epoll_event[MAX_EVENTS]) {
 Epoll::~Epoll() {
   if (epfd_ != -1) {
     close(epfd_);
-    epfd_ = -1;
   }
   delete[] events_;
 }
@@ -27,10 +26,20 @@ std::vector<Channel *> Epoll::Poll(int timeout) {
   errif(nfds == -1, "epoll wait error");
   for (int i = 0; i < nfds; ++i) {
     Channel *channel = (Channel *)events_[i].data.ptr;
-    channel->SetReadyEvents(events_[i].events);
+    int events = static_cast<int>(events_[i].events);
+    if (events & EPOLLIN) {
+      channel->SetReadyEvents(Channel::READ_EVENT);
+    }
+    if (events & EPOLLOUT) {
+      channel->SetReadyEvents(Channel::WRITE_EVENT);
+    }
+    if (events & EPOLLET) {
+      channel->SetReadyEvents(Channel::ET);
+    }
     active_channels.push_back(channel);
   }
   return active_channels;
+
 }
 
 void Epoll::UpdateChannel(Channel *channel) {

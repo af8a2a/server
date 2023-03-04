@@ -47,6 +47,11 @@ void Connection::Write() {
   }
   send_buffer_->Clear();
 }
+void Connection::SetOnMessageCallback(std::function<void(Connection *)> const &callback) {
+  on_message_callback_ = callback;
+  std::function<void()> bus = std::bind(&Connection::Business, this);
+  channel_->SetReadCallback(bus);
+}
 
 void Connection::ReadNonBlocking() {
   int sockfd = sock_->GetFd();
@@ -77,7 +82,7 @@ void Connection::WriteNonBlocking() {
   int sockfd = sock_->GetFd();
   char buf[send_buffer_->Size()];
   memcpy(buf, send_buffer_->ToStr(), send_buffer_->Size());
-  int data_size =static_cast<int>(send_buffer_->Size());
+  int data_size = static_cast<int>(send_buffer_->Size());
   int data_left = data_size;
   while (data_left > 0) {
     ssize_t bytes_write = write(sockfd, buf + data_size - data_left, data_left);
@@ -132,9 +137,15 @@ void Connection::WriteBlocking() {
     state_ = State::Closed;
   }
 }
-
+void Connection::Send(const std::string &msg) {
+  SetSendBuffer(msg.c_str());
+  Write();
+}
 void Connection::Close() { delete_connectioin_callback_(sock_); }
-
+void Connection::Business(){
+  Read();
+  on_message_callback_(this);
+}
 Connection::State Connection::GetState() { return state_; }
 void Connection::SetSendBuffer(const char *str) { send_buffer_->SetBuf(str); }
 Buffer *Connection::GetReadBuffer() { return read_buffer_; }
@@ -153,3 +164,4 @@ void Connection::SetOnConnectCallback(std::function<void(Connection *)> const &c
 void Connection::GetlineSendBuffer() { send_buffer_->Getline(); }
 
 Socket *Connection::GetSocket() { return sock_; }
+
