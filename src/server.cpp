@@ -29,15 +29,8 @@
 #define BUFFER_SIZE 1024
 
 auto main(int argc, char *argv[]) -> int {//NOLINT
-  auto *loop = new EventLoop();
-  auto *server = new Server(loop);
 
-  Signal(SIGINT, [&] {
-    delete server;
-    delete loop;
-    std::cout << "\nServer exit!" << std::endl;
-    exit(0);
-  });
+  auto *server = new Server();
 
   server->NewConnect(
       [](Connection *conn) { std::cout << "New connection fd: " << conn->GetSocket()->GetFd() << std::endl; });
@@ -49,6 +42,6 @@ auto main(int argc, char *argv[]) -> int {//NOLINT
     }
   });
 
-  loop->Loop();
+  server->Start();
   return 0;
 }

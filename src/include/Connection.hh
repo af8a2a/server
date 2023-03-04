@@ -2,6 +2,7 @@
 #include "Macros.h"
 
 #include <functional>
+#include <memory>
 
 class EventLoop;
 class Socket;
@@ -27,7 +28,6 @@ class Connection {
   void SetDeleteConnectionCallback(std::function<void(Socket *)> const &callback);
   void SetOnConnectCallback(std::function<void(Connection *)> const &callback);
   void SetOnMessageCallback(std::function<void(Connection *)> const &callback);
-  void Business();
 
   State GetState();
   void Close();
@@ -41,19 +41,19 @@ class Connection {
 
   void OnConnect(std::function<void()> func);
   void OnMessage(std::function<void()> func);
-
  private:
-  EventLoop *loop_;
-  Socket *sock_;
-  Channel *channel_{nullptr};
+  std::unique_ptr<Socket> sock_;
+  std::unique_ptr<Channel> channel_;
   State state_{State::Invalid};
-  Buffer *read_buffer_{nullptr};
-  Buffer *send_buffer_{nullptr};
+  std::unique_ptr<Buffer> read_buf_;
+  std::unique_ptr<Buffer> send_buf_;
   std::function<void(Socket *)> delete_connectioin_callback_;
 
   std::function<void(Connection *)> on_connect_callback_;
   std::function<void(Connection *)> on_message_callback_;
 
+
+  void Business();
   void ReadNonBlocking();
   void WriteNonBlocking();
   void ReadBlocking();
