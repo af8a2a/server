@@ -36,10 +36,9 @@ auto main(int argc, char *argv[]) -> int {//NOLINT
       [](Connection *conn) { std::cout << "New connection fd: " << conn->GetSocket()->GetFd() << std::endl; });
 
   server->OnMessage([](Connection *conn) {
-    std::cout << "Message from client " << conn->ReadBuffer() << std::endl;
-    if (conn->GetState() == Connection::State::Connected) {
+    std::cout << "Message from client "<< conn->ReadBuffer() << std::endl;
       conn->Send(conn->ReadBuffer());
-    }
+    
   });
 
   server->Start();

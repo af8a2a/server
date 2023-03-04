@@ -144,14 +144,15 @@ void Connection::Send(const std::string &msg) {
   Write();
 }
 void Connection::Close() { delete_connectioin_callback_(sock_.get()); }
+
 void Connection::Business() {
   Read();
   on_message_callback_(this);
 }
 Connection::State Connection::GetState() { return state_; }
 void Connection::SetSendBuffer(const char *str) { send_buf_->SetBuf(str); }
-Buffer *Connection::GetReadBuffer() { return send_buf_.get(); }
-const char *Connection::ReadBuffer() { return send_buf_->ToStr(); }
+Buffer *Connection::GetReadBuffer() { return read_buf_.get(); }
+const char *Connection::ReadBuffer() { return read_buf_->ToStr(); }
 Buffer *Connection::GetSendBuffer() { return send_buf_.get(); }
 const char *Connection::SendBuffer() { return send_buf_->ToStr(); }
 
