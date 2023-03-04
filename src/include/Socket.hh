@@ -21,10 +21,10 @@ class Socket {
 
   DISALLOW_COPY_AND_MOVE(Socket);
 
-  void Bind(InetAddress *);
+  void Bind(InetAddress *) const;
   void Listen();
   auto Accept(InetAddress *) -> int;
-
+  void Bind(const char *ipaddr, uint16_t port) const;
   void Connect(InetAddress *);
   void Connect(const char *ipaddr, uint16_t port);
   void SetNonBlocking();

@@ -1,5 +1,6 @@
 #pragma once
 #include <functional>
+#include <memory>
 #include "Macros.h"
 
 class EventLoop;
@@ -9,9 +10,8 @@ class Channel;
 class Acceptor
 {
 private:
-    EventLoop *loop_;
-    Socket *sock_;
-    Channel *accept_channel_;
+    std::unique_ptr<Socket> sock_;
+    std::unique_ptr<Channel> accept_channel_;
     std::function<void(Socket*)> new_connection_callback_;
 public:
 

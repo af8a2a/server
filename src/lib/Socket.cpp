@@ -29,11 +29,21 @@ Socket::~Socket(){
     }
 }
 
-void Socket::Bind(InetAddress *_addr){
+void Socket::Bind(InetAddress *_addr) const{
     struct sockaddr_in addr = _addr->GetAddr();
     errif(::bind(fd_, (sockaddr*)&addr, sizeof(addr)) == -1, "socket bind error");
 }
-
+void Socket::Bind(const char *ipaddr, uint16_t port) const {
+  assert(fd_ != -1);
+  struct sockaddr_in addr{};
+  memset(&addr, 0, sizeof(addr));
+  addr.sin_family = AF_INET;
+  addr.sin_addr.s_addr = inet_addr(ipaddr);
+  addr.sin_port = htons(port);
+  if (::bind(fd_, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+    perror("Failed to bind socket");
+  }
+}
 void Socket::Listen(){
     errif(::listen(fd_, SOMAXCONN) == -1, "socket listen error");
 }
