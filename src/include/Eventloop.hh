@@ -1,6 +1,9 @@
 #pragma once
 
 #include <functional>
+#include <memory>
+#include "Macros.h"
+#include "timer.hh"
 class Epoll;
 class Channel;
 class ThreadPool;
@@ -8,17 +11,16 @@ class ThreadPool;
 class EventLoop {
  public:
   EventLoop();
-  EventLoop(const EventLoop &) = default;
-  EventLoop(EventLoop &&) = delete;
-  EventLoop &operator=(const EventLoop &) = default;
-  EventLoop &operator=(EventLoop &&) = delete;
   ~EventLoop();
+  DISALLOW_COPY_AND_MOVE(EventLoop);
 
   void Loop();
   void UpdateChannel(Channel *channel);
   void DeleteChannel(Channel *channel);
 
  private:
+  std::unique_ptr<HeapTimer> timer_;
+  time_t timeout_{-1};
   Epoll *epoll_{nullptr};
   bool quit_{false};
 };

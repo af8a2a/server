@@ -45,7 +45,7 @@ bool Channel::GetInEpoll() { return in_epoll_; }
 void Channel::SetInEpoll(bool setting) { in_epoll_ = setting; }
 
 void Channel::SetReadyEvents(uint32_t event) {
-    if (event & READ_EVENT) {
+  if (event & READ_EVENT) {
     ready_events_ |= READ_EVENT;
   }
   if (event & WRITE_EVENT) {
@@ -54,7 +54,6 @@ void Channel::SetReadyEvents(uint32_t event) {
   if (event & ET) {
     ready_events_ |= ET;
   }
-
 }
 
 void Channel::SetReadCallback(std::function<void()> const &callback) { read_callback_ = callback; }

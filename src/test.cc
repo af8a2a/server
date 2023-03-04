@@ -9,25 +9,28 @@
 #include "threadpool.hh"
 
 void OneClient(int msgs, int wait) {  // NOLINT
+
   Socket *sock = new Socket();
-  sock->Connect("127.0.0.1", 1234);
-
-  Connection *conn = new Connection(nullptr, sock);
-
-    conn->Send("hello");
-    conn->Close();
-    conn->Read();
-    std::cout << "Message from server: " << conn->ReadBuffer() << std::endl;
   
+  //sock->SetNonBlocking();
+  sock->Connect("127.0.0.1", 1234);
+  
+  Connection *conn = new Connection(nullptr, sock);
+ 
+  conn->Send("hello");
+  conn->Read();
+  conn->Close();
+  std::cout << "Message from server: " << conn->ReadBuffer() << std::endl;
 }
+void Print(int a, double b, const char *c, std::string const &d) { std::cout << a << b << c << d << std::endl; }
 
-int main(int argc, char *argv[]) {
-  int threads = 1000;
-  int msgs = 100;
-  int wait = 0;
+void Test() { std::cout << "hellp" << std::endl; }
+int main() {
+  int threads = 10000;
+
 
   ThreadPool *poll = new ThreadPool(threads);
-  std::function<void()> func = std::bind(OneClient, msgs, wait);
+  std::function<void()> func =  std::bind(Print, 1, 3.14, "hello", std::string("world"));
   for (int i = 0; i < threads; ++i) {
     poll->Add(func);
   }

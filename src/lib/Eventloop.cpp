@@ -1,19 +1,21 @@
 
+#include <memory>
 #include <vector>
 
 #include "Channel.hh"
 #include "Eventloop.hh"
 #include "epoll.hh"
+#include "timer.hh"
 
-EventLoop::EventLoop() : epoll_(new Epoll()) {  }
+EventLoop::EventLoop() : epoll_(new Epoll()) {}
 
 EventLoop::~EventLoop() { delete epoll_; }
 
 void EventLoop::Loop() {
   while (!quit_) {
-    std::vector<Channel *> chs;
-    chs = epoll_->Poll();
-    for (auto &channel : chs) {
+    if (timeout_ > 0) {
+    }
+    for (auto &channel : epoll_->Poll()) {
       channel->HandleEvent();
     }
   }

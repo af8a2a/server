@@ -21,7 +21,6 @@ class Server {
   std::function<void(Connection *)> on_connect_callback_;
   std::function<void(Connection *)> on_message_callback_;
   std::function<void(Connection *)> new_connect_callback_;
-
  public:
   explicit Server();
   ~Server();

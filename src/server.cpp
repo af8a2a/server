@@ -21,14 +21,14 @@
 #include "Connection.hh"
 #include "Eventloop.hh"
 #include "InetAddress.hpp"
+#include "SignalHandler.hh"
 #include "Socket.hh"
 #include "epoll.hh"
 #include "threadpool.hh"
-#include "SignalHandler.hh"
 #define MAX_EVENT_NUMBER 1024
 #define BUFFER_SIZE 1024
 
-auto main(int argc, char *argv[]) -> int {//NOLINT
+auto main(int argc, char *argv[]) -> int {  // NOLINT
 
   auto *server = new Server();
 
@@ -36,9 +36,8 @@ auto main(int argc, char *argv[]) -> int {//NOLINT
       [](Connection *conn) { std::cout << "New connection fd: " << conn->GetSocket()->GetFd() << std::endl; });
 
   server->OnMessage([](Connection *conn) {
-    std::cout << "Message from client "<< conn->ReadBuffer() << std::endl;
-      conn->Send(conn->ReadBuffer());
-    
+    std::cout << "Message from client " << conn->ReadBuffer() << std::endl;
+    conn->Send(conn->ReadBuffer());
   });
 
   server->Start();

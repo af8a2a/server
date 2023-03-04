@@ -108,7 +108,7 @@ void Connection::WriteNonBlocking() {
  * @brief Never used by server, only for client
  *
  */
- void Connection::ReadBlocking() {
+void Connection::ReadBlocking() {
   int sockfd = sock_->GetFd();
   unsigned int rcv_size = 0;
   socklen_t len = sizeof(rcv_size);

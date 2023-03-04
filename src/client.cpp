@@ -2,7 +2,6 @@
 #include <Socket.hh>
 #include <iostream>
 
-
 int main() {
   Socket *sock = new Socket();
   sock->Connect("127.0.0.1", 1234);

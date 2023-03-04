@@ -3,13 +3,12 @@
 #include <unistd.h>
 #include <cstring>
 #include "Channel.hh"
-#include "util.hpp"
 #include "Socket.hh"
+#include "util.hpp"
 #define MAX_EVENTS 1000
 Epoll::Epoll() : epfd_(epoll_create1(0)), events_(new epoll_event[MAX_EVENTS]) {
-  
   errif(epfd_ == -1, "epoll create error");
-  
+
   memset(events_, 0, sizeof(*events_) * MAX_EVENTS);
 }
 
@@ -39,7 +38,6 @@ std::vector<Channel *> Epoll::Poll(int timeout) {
     active_channels.push_back(channel);
   }
   return active_channels;
-
 }
 
 void Epoll::UpdateChannel(Channel *channel) {
