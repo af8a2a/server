@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <cassert>
 #include <cstring>
+#include <iostream>
 #include <utility>
 #include "Buffer.h"
 #include "Channel.hh"
@@ -22,13 +23,16 @@ Connection::Connection(EventLoop *loop, Socket *sock) {
   state_ = State::Connected;
 }
 
-Connection::~Connection() = default;
+Connection::~Connection() {
+  Close();
+}
 
 void Connection::Read() {
   if (state_ != State::Connected) {
     perror("Connection is not connected, can not read");
     return;
   }
+  std::cout<<"run read"<<std::endl;
   assert(state_ == State::Connected && "connection state is disconnected!");
   read_buf_->Clear();
   if (sock_->IsNonBlocking()) {
@@ -70,12 +74,14 @@ void Connection::ReadNonBlocking() {
                ((errno == EAGAIN) || (errno == EWOULDBLOCK))) {  // 非阻塞IO，这个条件表示数据全部读取完毕
       break;
     } else if (bytes_read == 0) {  // EOF，客户端断开连接
-      printf("read EOF, client fd %d disconnected\n", sockfd);
+      printf("read EOF, non-block client fd %d disconnected\n", sockfd);
       state_ = State::Closed;
+      //Close();
       break;
     } else {
       printf("Other error on client fd %d\n", sockfd);
       state_ = State::Closed;
+      //Close();
       break;
     }
   }

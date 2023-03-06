@@ -31,9 +31,11 @@ class Connection {
 
   State GetState();
   void Close();
+
   void SetSendBuffer(const char *str);
   Buffer *GetReadBuffer();
   const char *ReadBuffer();
+
   Buffer *GetSendBuffer();
   const char *SendBuffer();
   void GetlineSendBuffer();
@@ -41,6 +43,7 @@ class Connection {
 
   void OnConnect(std::function<void()> func);
   void OnMessage(std::function<void()> func);
+
  private:
   std::unique_ptr<Socket> sock_;
   std::unique_ptr<Channel> channel_;
@@ -51,7 +54,6 @@ class Connection {
 
   std::function<void(Connection *)> on_connect_callback_;
   std::function<void(Connection *)> on_message_callback_;
-
 
   void Business();
   void ReadNonBlocking();

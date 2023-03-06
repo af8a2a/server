@@ -26,11 +26,11 @@ void Print(int a, double b, const char *c, std::string const &d) { std::cout << 
 
 void Test() { std::cout << "hellp" << std::endl; }
 int main() {
-  int threads = 10000;
+  int threads = 20000;
 
 
   ThreadPool *poll = new ThreadPool(threads);
-  std::function<void()> func =  std::bind(Print, 1, 3.14, "hello", std::string("world"));
+  std::function<void()> func =  std::bind(OneClient, 100,10);
   for (int i = 0; i < threads; ++i) {
     poll->Add(func);
   }

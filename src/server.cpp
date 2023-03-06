@@ -36,6 +36,10 @@ auto main(int argc, char *argv[]) -> int {  // NOLINT
       [](Connection *conn) { std::cout << "New connection fd: " << conn->GetSocket()->GetFd() << std::endl; });
 
   server->OnMessage([](Connection *conn) {
+    if (conn->GetState() == Connection::State::Closed) {
+      conn->Close();
+      return;
+    }
     std::cout << "Message from client " << conn->ReadBuffer() << std::endl;
     conn->Send(conn->ReadBuffer());
   });
