@@ -1,6 +1,11 @@
 #pragma once
 #include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/in.h>
 #include <strings.h>
+#include <unistd.h>
+#include <cstring>
+#include <string>
 
 class InetAddress {
  public:
@@ -17,8 +22,10 @@ class InetAddress {
     addr_.sin_addr.s_addr = inet_addr(ipaddr);
     addr_.sin_port = htons(port);
   }
+
+
   void SetAddr(sockaddr_in addr) { addr_ = addr; }
-  
+
   const char *GetIp() {
     char buf[1024];
     return inet_ntop(AF_INET, &addr_.sin_addr, buf, sizeof(buf));

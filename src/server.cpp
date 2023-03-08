@@ -1,4 +1,4 @@
-#include "Server.hh"
+#include "TcpServer.hh"
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -30,13 +30,15 @@
 
 auto main(int argc, char *argv[]) -> int {  // NOLINT
 
-  auto *server = new Server();
+  auto *server = new TcpServer();
 
   server->NewConnect(
       [](Connection *conn) { std::cout << "New connection fd: " << conn->GetSocket()->GetFd() << std::endl; });
 
   server->OnMessage([](Connection *conn) {
     if (conn->GetState() == Connection::State::Closed) {
+      
+      std::cout << "connection fd " << conn->GetSocket()->GetFd() <<" is Close "<< std::endl;
       conn->Close();
       return;
     }

@@ -1,4 +1,4 @@
-#include "Server.hh"
+#include "TcpServer.hh"
 #include <arpa/inet.h>
 #include <memory>
 #include "Acceptor.hh"
@@ -11,11 +11,11 @@
 #include "util.hpp"
 #define READ_BUFFER 1024
 
-Server::Server() {
+TcpServer::TcpServer() {
   main_reactor_ = std::make_unique<EventLoop>();
   acceptor_ = std::make_unique<Acceptor>(main_reactor_.get());
   thread_pool_ = std::make_unique<ThreadPool>();
-  std::function<void(Socket *)> callback = std::bind(&Server::NewConnection, this, std::placeholders::_1);
+  std::function<void(Socket *)> callback = std::bind(&TcpServer::NewConnection, this, std::placeholders::_1);
   acceptor_->SetNewConnectionCallback(callback);
 
   int size = static_cast<int>(std::thread::hardware_concurrency());
@@ -24,20 +24,22 @@ Server::Server() {
     sub_reactors_.emplace_back(std::make_unique<EventLoop>());
   }
 }
-void Server::Start() {
+void TcpServer::Start() {
   for (auto &sub_reactor : sub_reactors_) {
     std::function<void()> sub_loop = std::bind(&EventLoop::Loop, sub_reactor.get());
     thread_pool_->Add(std::move(sub_loop));
   }
   main_reactor_->Loop();
 }
-Server::~Server() = default;
+TcpServer::~TcpServer() = default;
 
-void Server::NewConnection(Socket *sock) {
+void TcpServer::NewConnection(Socket *sock) {
+  //新连接到达，随机分配给一个线程
   errif(sock->GetFd() == -1, "new connection error");
   uint64_t random = sock->GetFd() % sub_reactors_.size();
   auto conn = std::make_unique<Connection>(sub_reactors_[random].get(), sock);
-  std::function<void(Socket *)> callback = std::bind(&Server::DeleteConnection, this, std::placeholders::_1);
+
+  std::function<void(Socket *)> callback = std::bind(&TcpServer::DeleteConnection, this, std::placeholders::_1);
   conn->SetDeleteConnectionCallback(callback);
   conn->SetOnConnectCallback(on_connect_callback_);
   conn->SetOnMessageCallback(on_message_callback_);
@@ -48,7 +50,7 @@ void Server::NewConnection(Socket *sock) {
   }
 }
 
-void Server::DeleteConnection(Socket *sock) {
+void TcpServer::DeleteConnection(Socket *sock) {
   int sockfd = sock->GetFd();
   auto iter = connections_.find(sockfd);
   if (iter != connections_.end()) {
@@ -56,8 +58,8 @@ void Server::DeleteConnection(Socket *sock) {
   }
 }
 
-void Server::OnConnect(std::function<void(Connection *)> func) { on_connect_callback_ = std::move(func); }
+void TcpServer::OnConnect(std::function<void(Connection *)> func) { on_connect_callback_ = std::move(func); }
 
-void Server::OnMessage(std::function<void(Connection *)> func) { on_message_callback_ = std::move(func); }
+void TcpServer::OnMessage(std::function<void(Connection *)> func) { on_message_callback_ = std::move(func); }
 
-void Server::NewConnect(std::function<void(Connection *)> func) { new_connect_callback_ = std::move(func); }
+void TcpServer::NewConnect(std::function<void(Connection *)> func) { new_connect_callback_ = std::move(func); }

@@ -25,6 +25,7 @@ class Socket {
   void Listen();
   auto Accept(InetAddress *) -> int;
   void Bind(const char *ipaddr, uint16_t port) const;
+  void Connect(const std::string &Address, const std::string &service);
   void Connect(InetAddress *);
   void Connect(const char *ipaddr, uint16_t port);
   void SetNonBlocking();

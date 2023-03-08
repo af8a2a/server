@@ -29,6 +29,7 @@ class Channel {
   static const int READ_EVENT;   // NOLINT
   static const int WRITE_EVENT;  // NOLINT
   static const int ET;           // NOLINT
+  
  private:
   EventLoop *loop_;
   Socket *socket_;

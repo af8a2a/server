@@ -68,6 +68,51 @@ int Socket::Accept(InetAddress *_addr) {
   _addr->SetAddr(addr);
   return clnt_sockfd;
 }
+  auto Socket::Connect(const std::string &Address, const std::string &service) -> void {
+    // client 連線到 server 的程式碼
+    // 透過 stream socket 連線到 www.example.com 的 port 80 (http)
+    // 不是 IPv4 就是 IPv6
+
+    int sockfd = 0;
+    struct addrinfo hints{};
+    struct addrinfo *servinfo = nullptr;
+    struct addrinfo *ptr= nullptr;
+    int result=-1;
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;  // 設定 AF_INET6 表示強迫使用 IPv6
+    hints.ai_socktype = SOCK_STREAM;
+    result = getaddrinfo(Address.c_str(), service.c_str(), &hints, &servinfo);
+    if (result != 0) {
+      fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(result));
+    }
+
+    // 不斷執行迴圈，直到我們可以連線成功
+    for (ptr = servinfo; ptr != nullptr; ptr = ptr->ai_next) {
+      sockfd = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
+      if (sockfd == -1) {
+        perror("socket");
+        continue;
+      }
+
+      if (connect(sockfd, ptr->ai_addr, ptr->ai_addrlen) == -1) {
+        close(sockfd);
+        perror("connect");
+        continue;
+      }
+
+      break;  // if we get here, we must have connected successfully
+    }
+
+    if (ptr == nullptr) {
+      // 迴圈已經執行到 list 的最後，都無法連線
+      fprintf(stderr, "failed to connect\n");
+    }
+
+    freeaddrinfo(servinfo);  // 釋放 servinfo
+    fd_ = sockfd;
+  
+};
 
 void Socket::Connect(InetAddress *_addr) {
   // for client socket
