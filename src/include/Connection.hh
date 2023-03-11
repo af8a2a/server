@@ -8,6 +8,7 @@ class EventLoop;
 class Socket;
 class Channel;
 class Buffer;
+class HTTP;
 class Connection {
  public:
   enum State {
@@ -29,6 +30,8 @@ class Connection {
   void SetOnConnectCallback(std::function<void(Connection *)> const &callback);
   void SetOnMessageCallback(std::function<void(Connection *)> const &callback);
 
+  HTTP* GetHttpConnection();
+      
   State GetState();
   void Close();
 
@@ -50,11 +53,12 @@ class Connection {
   State state_{State::Invalid};
   std::unique_ptr<Buffer> read_buf_;
   std::unique_ptr<Buffer> send_buf_;
-  std::function<void(Socket *)> delete_connectioin_callback_;
+  std::unique_ptr<HTTP> http_connection_;
 
+  std::function<void(Socket *)> delete_connectioin_callback_;
   std::function<void(Connection *)> on_connect_callback_;
   std::function<void(Connection *)> on_message_callback_;
-
+  
   void Business();
   void ReadNonBlocking();
   void WriteNonBlocking();

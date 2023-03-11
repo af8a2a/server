@@ -13,7 +13,7 @@ void OneClient(const std::string &host, const std::string &path) {  // NOLINT
   Socket *sock = new Socket();
 
   // sock->SetNonBlocking();
-  sock->Connect("cs144.keithw.org", "http");
+  sock->Connect("127.0.0.1",1234);
   
   Connection *conn = new Connection(nullptr, sock);
  

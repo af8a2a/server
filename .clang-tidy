@@ -6,6 +6,9 @@ Checks:     '
             clang-analyzer-*,
 
             concurrency-*,
+            
+            google-*,
+            -google-readability-casting,
 
             cppcoreguidelines-*,
             -cppcoreguidelines-macro-usage,
@@ -18,8 +21,7 @@ Checks:     '
             -cppcoreguidelines-pro-bounds-pointer-arithmetic,
             -cppcoreguidelines-pro-type-cstyle-cast,
 
-            google-*,
-            -google-readability-casting,
+
 
             hicpp-*,
             -hicpp-vararg,

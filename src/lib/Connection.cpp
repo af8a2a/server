@@ -7,6 +7,7 @@
 #include "Buffer.h"
 #include "Channel.hh"
 #include "Socket.hh"
+#include "httpconn.hh"
 #define READ_BUFFER 1024
 
 #define ASSERT(expr, message) assert((expr) && (message))
@@ -18,21 +19,20 @@ Connection::Connection(EventLoop *loop, Socket *sock) {
     channel_->EnableRead();
     channel_->UseET();
   }
+  http_connection_ = std::make_unique<HTTP>();
   read_buf_ = std::make_unique<Buffer>();
   send_buf_ = std::make_unique<Buffer>();
   state_ = State::Connected;
 }
 
-Connection::~Connection() {
-  Close();
-}
+Connection::~Connection() { Close(); }
 
 void Connection::Read() {
   if (state_ != State::Connected) {
     perror("Connection is not connected, can not read");
     return;
   }
-  std::cout<<"run read"<<std::endl;
+  std::cout << "run read" << std::endl;
   assert(state_ == State::Connected && "connection state is disconnected!");
   read_buf_->Clear();
   if (sock_->IsNonBlocking()) {
@@ -76,12 +76,12 @@ void Connection::ReadNonBlocking() {
     } else if (bytes_read == 0) {  // EOF，客户端断开连接
       printf("read EOF, non-block client fd %d disconnected\n", sockfd);
       state_ = State::Closed;
-      //Close();
+      // Close();
       break;
     } else {
       printf("Other error on client fd %d\n", sockfd);
       state_ = State::Closed;
-      //Close();
+      // Close();
       break;
     }
   }
@@ -164,7 +164,12 @@ const char *Connection::SendBuffer() { return send_buf_->ToStr(); }
 
 void Connection::SetDeleteConnectionCallback(std::function<void(Socket *)> const &callback) {
   delete_connectioin_callback_ = callback;
+  channel_->SetTimeoutCallback([this]() {
+    delete_connectioin_callback_(this->GetSocket());
+    
+  });
 }
+
 void Connection::SetOnConnectCallback(std::function<void(Connection *)> const &callback) {
   on_connect_callback_ = callback;
   channel_->SetReadCallback([this]() { on_connect_callback_(this); });
@@ -173,3 +178,5 @@ void Connection::SetOnConnectCallback(std::function<void(Connection *)> const &c
 void Connection::GetlineSendBuffer() { send_buf_->Getline(); }
 
 Socket *Connection::GetSocket() { return sock_.get(); }
+
+HTTP *Connection::GetHttpConnection() { return http_connection_.get(); }

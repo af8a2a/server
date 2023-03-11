@@ -1,117 +1,140 @@
+/*
+ * @Author       : mark
+ * @Date         : 2020-06-17
+ * @copyleft Apache 2.0
+ */
 #include "timer.hh"
-void HeapTimer::Siftup(size_t i) {  // NOLINT
-  size_t j = (i - 1) / 2;           // NOLINT
-  while (i > 0 && heap_[i] < heap_[j]) {
-    std::swap(heap_[i], heap_[j]);
-    heap_[i]->index_ = i;
-    heap_[j]->index_ = j;
+#include "Channel.hh"
+void HeapTimer::Siftup(size_t i) {
+  assert(i >= 0 && i < heap_.size());
+  size_t j = (i - 1) / 2;
+  while (j >= 0) {
+    if (heap_[j] < heap_[i]) {
+      break;
+    }
+    SwapNode(i, j);
     i = j;
     j = (i - 1) / 2;
   }
 }
 
-void HeapTimer::Siftdown(size_t index, size_t nums) {  // NOLINT
-  size_t j = index * 2 + 1;                            // NOLINT
-  while (j < nums) {
-    if (j + 1 < nums && heap_[j + 1] < heap_[j]) {
+void HeapTimer::SwapNode(size_t i, size_t j) {
+  assert(i >= 0 && i < heap_.size());
+  assert(j >= 0 && j < heap_.size());
+  std::swap(heap_[i], heap_[j]);
+  ref_[heap_[i].id_] = i;
+  ref_[heap_[j].id_] = j;
+}
+
+bool HeapTimer::Siftdown(size_t index, size_t n) {
+  assert(index >= 0 && index < heap_.size());
+  assert(n >= 0 && n <= heap_.size());
+  size_t i = index;
+  size_t j = i * 2 + 1;
+  while (j < n) {
+    if (j + 1 < n && heap_[j + 1] < heap_[j]) {
       j++;
     }
-    if (heap_[index] < heap_[j]) {
+    if (heap_[i] < heap_[j]) {
       break;
     }
-    std::swap(heap_[index], heap_[j]);
-    heap_[index]->index_ = index;
-    heap_[j]->index_ = j;
-    index = j;
-    j = index * 2 + 1;
+    SwapNode(i, j);
+    i = j;
+    j = i * 2 + 1;
+  }
+  return i > index;
+}
+
+void HeapTimer::Add(int id, int timeout, const TimeoutCallBack &callback) {
+  assert(id >= 0);
+  size_t i;
+  if (!ref_.contains(id)) {
+    /* 新节点：堆尾插入，调整堆 */
+    i = heap_.size();
+    ref_[id] = i;
+    heap_.push_back({id, Clock::now() + MS(timeout), callback});
+    Siftup(i);
+  } else {
+    /* 已有结点：调整堆 */
+    i = ref_[id];
+    heap_[i].expires_ = Clock::now() + MS(timeout);
+    heap_[i].callback_ = callback;
+    if (!Siftdown(i, heap_.size())) {
+      Siftup(i);
+    }
   }
 }
 
-auto HeapTimer::Action(int _id) -> bool {
-  if (ref_.count(_id) != 1) {
-    return false;
+void HeapTimer::DoWork(int id) {
+  /* 删除指定id结点，并触发回调函数 */
+  if (heap_.empty() || !ref_.contains(id)) {
+    return;
   }
-  auto callback = std::move(ref_[_id]->cbfunc_);
-  if (callback) {
-    callback();
-  };
-  return Del(_id);
+  size_t index = ref_[id];
+  TimerNode node = heap_[index];
+  node.callback_();
+  Del(index);
 }
 
-void HeapTimer::Action(TimerNode *node) {
-  auto callback = std::move(node->cbfunc_);
-  if (callback) {
-    callback();
-  };
-  Del(node);
-}
-
-auto HeapTimer::Add(time_t timeSlot, TimerCb cbfunc) -> int {
-  time_t expire = time(nullptr) + timeSlot;
-  size_t index = heap_.size();
-  int timer_id = NextCount();
-  auto *node = new TimerNode({expire, std::move(cbfunc), index, timer_id});
-  heap_.push_back(node);
-  Siftup(heap_.size() - 1);
-  ref_[timer_id] = node;
-  return timer_id;
-}
-
-auto HeapTimer::Del(int _id) -> bool {
-  if (!ref_.contains(_id)) {
-    return false;
+void HeapTimer::Del(size_t index) {
+  /* 删除指定位置的结点 */
+  assert(!heap_.empty() && index >= 0 && index < heap_.size());
+  /* 将要删除的结点换到队尾，然后调整堆 */
+  size_t i = index;
+  size_t n = heap_.size() - 1;
+  assert(i <= n);
+  if (i < n) {
+    SwapNode(i, n);
+    if (!Siftdown(i, n)) {
+      Siftup(i);
+    }
   }
-  Del(ref_[_id]);
-  return true;
-}
-
-void HeapTimer::Del(TimerNode *node) {
-  assert(node != nullptr && !heap_.empty());
-  size_t index = node->index_;
-  size_t size = heap_.size() - 1;
-  assert(index <= size);
-  if (index != size) {
-    std::swap(heap_[index], heap_[size]);
-    heap_[index]->index_ = index;
-    Siftdown(index, size);
-    Siftup(index);
-  }
+  /* 队尾元素删除 */
+  ref_.erase(heap_.back().id_);
   heap_.pop_back();
-  ref_.erase(node->id_);
-  delete node;
 }
 
-auto HeapTimer::Adjust(int _id, time_t newExpires) -> bool {
-  if (ref_.count(_id) != 1) {
-    return false;
-  }
-  ref_[_id]->expires_ = newExpires;
-  Siftdown(ref_[_id]->index_, heap_.size());
-  return true;
+void HeapTimer::Adjust(int id, int timeout) {
+  /* 调整指定id的结点 */
+  assert(!heap_.empty() && ref_.contains(id));
+  heap_[ref_[id]].expires_ = Clock::now() + MS(timeout);
+  ;
+  Siftdown(ref_[id], heap_.size());
 }
 
 void HeapTimer::Tick() {
+  /* 清除超时结点 */
   if (heap_.empty()) {
     return;
   }
-  time_t now = time(nullptr);
   while (!heap_.empty()) {
-    auto *node = heap_.front();
-    if (now < node->expires_) {
+    TimerNode node = heap_.front();
+    if (std::chrono::duration_cast<MS>(node.expires_ - Clock::now()).count() > 0) {
       break;
     }
-    Action(node);
+    node.callback_();
+    Pop();
   }
+}
+
+void HeapTimer::Pop() {
+  assert(!heap_.empty());
+  Del(0);
 }
 
 void HeapTimer::Clear() {
   ref_.clear();
-  for (auto &item : heap_) {
-    delete item;
-  }
   heap_.clear();
 }
 
-auto HeapTimer::NextCount() -> int { return ++id_count_; }
-HeapTimer::HeapTimer() { heap_.reserve(64); }
-HeapTimer::~HeapTimer() { Clear(); }
+int HeapTimer::GetNextTick() {
+  Tick();
+  size_t res = -1;
+  if (!heap_.empty()) {
+    res = std::chrono::duration_cast<MS>(heap_.front().expires_ - Clock::now()).count();
+    if (res < 0) {
+      res = 0;
+    }
+  }
+  return static_cast<int>(res);
+}

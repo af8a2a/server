@@ -8,16 +8,14 @@
 #include "timer.hh"
 
 EventLoop::EventLoop() {
-  epoll_=std::make_unique<Epoll>();
+  epoll_ = std::make_unique<Epoll>();
+  timer_=std::make_unique<HeapTimer>();
 }
 
 EventLoop::~EventLoop() = default;
 
 void EventLoop::Loop() {
   while (!quit_) {
-    if (timeout_ > 0) {
-      timer_->Tick();
-    }
     for (auto &channel : epoll_->Poll()) {
       channel->HandleEvent();
     }

@@ -1,8 +1,9 @@
 #pragma once
 #include <sys/epoll.h>
+#include <memory>
 #include <vector>
 #include "Macros.h"
-
+class HeapTimer;
 class Channel;
 class Epoll {
  public:
@@ -17,6 +18,6 @@ class Epoll {
 
  private:
   int epfd_{1};
-  
+  std::unique_ptr<HeapTimer> timer_;
   struct epoll_event *events_{nullptr};
 };

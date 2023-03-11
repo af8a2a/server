@@ -1,4 +1,3 @@
-#include "TcpServer.hh"
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -23,29 +22,33 @@
 #include "InetAddress.hpp"
 #include "SignalHandler.hh"
 #include "Socket.hh"
+#include "TcpServer.hh"
 #include "epoll.hh"
+#include "httpconn.hh"
 #include "threadpool.hh"
 #define MAX_EVENT_NUMBER 1024
 #define BUFFER_SIZE 1024
 
+
 auto main(int argc, char *argv[]) -> int {  // NOLINT
+    auto *server = new TcpServer();
 
-  auto *server = new TcpServer();
+    server->NewConnect(
+        [](Connection *conn) { std::cout << "New connection fd: " << conn->GetSocket()->GetFd() << std::endl; });
 
-  server->NewConnect(
-      [](Connection *conn) { std::cout << "New connection fd: " << conn->GetSocket()->GetFd() << std::endl; });
+    server->OnMessage([](Connection *conn) {
+      if (conn->GetState() == Connection::State::Closed) {
+        std::cout << "connection fd " << conn->GetSocket()->GetFd() << " is Close " << std::endl;
+        conn->Close();
+        return;
+      }
+      HTTP* http=new HTTP();
+      http->Prase(conn->ReadBuffer());
+      std::cout << "Message from client " << conn->ReadBuffer() << std::endl;
+      conn->Send(conn->ReadBuffer());
+      delete(http);
+    });
 
-  server->OnMessage([](Connection *conn) {
-    if (conn->GetState() == Connection::State::Closed) {
-      
-      std::cout << "connection fd " << conn->GetSocket()->GetFd() <<" is Close "<< std::endl;
-      conn->Close();
-      return;
-    }
-    std::cout << "Message from client " << conn->ReadBuffer() << std::endl;
-    conn->Send(conn->ReadBuffer());
-  });
-
-  server->Start();
-  return 0;
+    server->Start();
+    return 0;
 }
