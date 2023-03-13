@@ -46,6 +46,7 @@ bool HeapTimer::Siftdown(size_t index, size_t n) {
 }
 
 void HeapTimer::Add(int id, int timeout, const TimeoutCallBack &callback) {
+  printf("add success");
   assert(id >= 0);
   size_t i;
   if (!ref_.contains(id)) {
@@ -108,10 +109,14 @@ void HeapTimer::Tick() {
     return;
   }
   while (!heap_.empty()) {
+    printf("working\n");
     TimerNode node = heap_.front();
-    if (std::chrono::duration_cast<MS>(node.expires_ - Clock::now()).count() > 0) {
+    if (std::chrono::duration_cast<MS>(node.expires_ - Clock::now()).count() > 0) {  // 没超时
       break;
     }
+    // 超时执行
+      printf("timeout!\n");
+
     node.callback_();
     Pop();
   }

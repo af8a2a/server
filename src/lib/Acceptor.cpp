@@ -25,7 +25,7 @@ void Acceptor::AcceptConnection() {
   int clnt_fd = sock_->Accept(clnt_addr.get());
   printf("new client fd %d! IP: %s Port: %d\n", clnt_fd, clnt_addr->GetIp(), clnt_addr->GetPort());
   fcntl(clnt_fd, F_SETFL, fcntl(clnt_fd, F_GETFL) | O_NONBLOCK);  // 新接受到的连接设置为非阻塞式
-  //生成新的socket
+  // 生成新的socket
   if (new_connection_callback_) {
     new_connection_callback_(new Socket(clnt_fd));
   }

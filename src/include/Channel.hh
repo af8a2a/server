@@ -31,7 +31,7 @@ class Channel {
   int GetTimeout();
   void SetTimeout(int timeout);
   void EnableTimeout();
-
+  void AddTimer();
   static const int READ_EVENT;
   static const int WRITE_EVENT;
   static const int TIMEOUT_EVENT;
@@ -45,6 +45,7 @@ class Channel {
   bool in_epoll_{false};
   bool should_delete_{false};
   int timeout_{-1};
+  int tick_id_{0};
   std::function<void()> read_callback_;
   std::function<void()> write_callback_;
   std::function<void()> timeout_callback_;

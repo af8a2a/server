@@ -13,14 +13,15 @@ class EventLoop {
   EventLoop();
   ~EventLoop();
   DISALLOW_COPY_AND_MOVE(EventLoop);
-  void AddTimer();
+  void AddTimer(int _fd, const std::function<void()> &func);
   void Loop();
   void UpdateChannel(Channel *channel);
   void DeleteChannel(Channel *channel);
+  void SetTimeout(int timeout);
 
  private:
   std::unique_ptr<HeapTimer> timer_;
-  time_t timeout_{-1};
+  int timeout_{-1};
   std::unique_ptr<Epoll> epoll_;
   // Epoll *epoll_{nullptr};
   bool quit_{false};

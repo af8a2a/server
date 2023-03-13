@@ -1,5 +1,6 @@
 #include "TcpServer.hh"
 #include <arpa/inet.h>
+#include <iostream>
 #include <memory>
 #include "Acceptor.hh"
 #include "Channel.hh"
@@ -22,11 +23,13 @@ TcpServer::TcpServer() {
   thread_pool_ = std::make_unique<ThreadPool>(size);
   for (int i = 0; i < size; ++i) {
     sub_reactors_.emplace_back(std::make_unique<EventLoop>());
+    
   }
 }
 void TcpServer::Start() {
   for (auto &sub_reactor : sub_reactors_) {
     std::function<void()> sub_loop = std::bind(&EventLoop::Loop, sub_reactor.get());
+    sub_reactor->SetTimeout(2000);
     thread_pool_->Add(std::move(sub_loop));
   }
   main_reactor_->Loop();
@@ -38,12 +41,15 @@ void TcpServer::NewConnection(Socket *sock) {
   errif(sock->GetFd() == -1, "new connection error");
   uint64_t random = sock->GetFd() % sub_reactors_.size();
   auto conn = std::make_unique<Connection>(sub_reactors_[random].get(), sock);
-
+ 
   std::function<void(Socket *)> callback = std::bind(&TcpServer::DeleteConnection, this, std::placeholders::_1);
   conn->SetDeleteConnectionCallback(callback);
+
   conn->SetOnConnectCallback(on_connect_callback_);
   conn->SetOnMessageCallback(on_message_callback_);
 
+  sub_reactors_[random]->AddTimer(sock->GetFd(), std::bind(&TcpServer::DeleteConnection, this, sock));
+  
   connections_[sock->GetFd()] = std::move(conn);
   if (new_connect_callback_) {
     new_connect_callback_(connections_[sock->GetFd()].get());

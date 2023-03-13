@@ -39,7 +39,7 @@ auto main(int argc, char *argv[]) -> int {  // NOLINT
     server->OnMessage([](Connection *conn) {
       if (conn->GetState() == Connection::State::Closed) {
         std::cout << "connection fd " << conn->GetSocket()->GetFd() << " is Close " << std::endl;
-        conn->Close();
+        //conn->Close();
         return;
       }
       HTTP* http=new HTTP();

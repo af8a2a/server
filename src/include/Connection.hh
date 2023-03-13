@@ -30,8 +30,8 @@ class Connection {
   void SetOnConnectCallback(std::function<void(Connection *)> const &callback);
   void SetOnMessageCallback(std::function<void(Connection *)> const &callback);
 
-  HTTP* GetHttpConnection();
-      
+  HTTP *GetHttpConnection();
+
   State GetState();
   void Close();
 
@@ -43,7 +43,7 @@ class Connection {
   const char *SendBuffer();
   void GetlineSendBuffer();
   Socket *GetSocket();
-
+  Channel *GetChannel();
   void OnConnect(std::function<void()> func);
   void OnMessage(std::function<void()> func);
 
@@ -58,7 +58,7 @@ class Connection {
   std::function<void(Socket *)> delete_connectioin_callback_;
   std::function<void(Connection *)> on_connect_callback_;
   std::function<void(Connection *)> on_message_callback_;
-  
+
   void Business();
   void ReadNonBlocking();
   void WriteNonBlocking();

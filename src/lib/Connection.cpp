@@ -25,7 +25,7 @@ Connection::Connection(EventLoop *loop, Socket *sock) {
   state_ = State::Connected;
 }
 
-Connection::~Connection() { Close(); }
+Connection::~Connection() = default;
 
 void Connection::Read() {
   if (state_ != State::Connected) {
@@ -164,10 +164,7 @@ const char *Connection::SendBuffer() { return send_buf_->ToStr(); }
 
 void Connection::SetDeleteConnectionCallback(std::function<void(Socket *)> const &callback) {
   delete_connectioin_callback_ = callback;
-  channel_->SetTimeoutCallback([this]() {
-    delete_connectioin_callback_(this->GetSocket());
-    
-  });
+  //channel_->SetTimeoutCallback(std::bind(&Connection::Close,this));
 }
 
 void Connection::SetOnConnectCallback(std::function<void(Connection *)> const &callback) {
@@ -180,3 +177,7 @@ void Connection::GetlineSendBuffer() { send_buf_->Getline(); }
 Socket *Connection::GetSocket() { return sock_.get(); }
 
 HTTP *Connection::GetHttpConnection() { return http_connection_.get(); }
+
+Channel *Connection::GetChannel() {
+  return channel_.get();
+}
