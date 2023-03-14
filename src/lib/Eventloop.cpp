@@ -23,7 +23,7 @@ void EventLoop::Loop() {
     if (timeout_ > 0) {
 
       time_ms = timer_->GetNextTick();
-      //std::cout<<time_ms<<std::endl;
+      std::cout<<time_ms<<std::endl;
     }
     for (auto &channel : epoll_->Poll(time_ms)) {
       channel->HandleEvent();

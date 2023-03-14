@@ -36,7 +36,7 @@ auto ThreadPool::Add(F &&func, Args &&...args) -> std::future<typename std::resu
   std::future<return_type> res = task->get_future();
   {
     std::unique_lock<std::mutex> lock(queue_mutex_);
-
+    
     // don't allow enqueueing after stopping the pool
     if (stop_) {
       throw std::runtime_error("enqueue on stopped ThreadPool");

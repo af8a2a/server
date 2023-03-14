@@ -108,7 +108,7 @@ void HeapTimer::Tick() {
   if (heap_.empty()) {
     return;
   }
-  printf("time is%ld",std::chrono::duration_cast<MS>(Clock::now().time_since_epoch()).count());
+  //printf("time is%ld",std::chrono::duration_cast<MS>(Clock::now().time_since_epoch()).count());
   while (!heap_.empty()) {
     TimerNode node = heap_.front();
     //printf("time is%ld\n", std::chrono::duration_cast<MS>(node.expires_ - Clock::now()).count());

@@ -2,7 +2,7 @@
 #include <functional>
 #include <memory>
 #include "Macros.h"
-
+class HeapTimer;
 class EventLoop;
 class Socket;
 class InetAddress;
@@ -12,7 +12,9 @@ class Acceptor
 private:
     std::unique_ptr<Socket> sock_;
     std::unique_ptr<Channel> accept_channel_;
-    std::function<void(Socket*)> new_connection_callback_;
+    std::function<void(Socket *)> new_connection_callback_;
+      std::unique_ptr<HeapTimer> timer_;
+
 public:
 
  explicit Acceptor(EventLoop *_loop);

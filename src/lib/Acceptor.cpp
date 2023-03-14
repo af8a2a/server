@@ -4,6 +4,7 @@
 #include <memory>
 #include "Channel.hh"
 #include "Socket.hh"
+#include "timer.hh"
 
 Acceptor::Acceptor(EventLoop *_loop) {
   sock_ = std::make_unique<Socket>();
@@ -14,7 +15,7 @@ Acceptor::Acceptor(EventLoop *_loop) {
   accept_channel_ = std::make_unique<Channel>(_loop, sock_.get());
   std::function<void()> callback = std::bind(&Acceptor::AcceptConnection, this);
   accept_channel_->SetReadCallback(callback);
-  
+  timer_=std::make_unique<HeapTimer>();
   accept_channel_->EnableRead();
 }
 Acceptor::~Acceptor() = default;
