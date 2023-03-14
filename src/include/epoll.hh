@@ -18,6 +18,6 @@ class Epoll {
 
  private:
   int epfd_{1};
-  std::unique_ptr<HeapTimer> timer_;
+  //std::unique_ptr<HeapTimer> timer_;
   struct epoll_event *events_{nullptr};
 };

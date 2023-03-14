@@ -76,12 +76,12 @@ void Connection::ReadNonBlocking() {
     } else if (bytes_read == 0) {  // EOF，客户端断开连接
       printf("read EOF, non-block client fd %d disconnected\n", sockfd);
       state_ = State::Closed;
-      // Close();
+     Close();
       break;
     } else {
       printf("Other error on client fd %d\n", sockfd);
       state_ = State::Closed;
-      // Close();
+       Close();
       break;
     }
   }

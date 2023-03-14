@@ -22,6 +22,9 @@ void Channel::HandleEvent() {
   }
 }
 
+void Channel::SetDelete() {
+  should_delete_=true;
+  }
 
 void Channel::EnableRead() {
   listen_events_ |= READ_EVENT;

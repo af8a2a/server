@@ -22,7 +22,7 @@ class Channel {
   void UseET();
   Socket *GetSocket();
   bool ShouldDelete();
-
+  void SetDelete();
   void SetReadyEvents(uint32_t event);
   void SetReadCallback(std::function<void()> const &callback);
   void SetWriteCallback(std::function<void()> const &callback);
