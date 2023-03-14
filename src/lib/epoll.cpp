@@ -10,7 +10,7 @@
 #define MAX_EVENTS 1000
 Epoll::Epoll() : epfd_(epoll_create1(0)), events_(new epoll_event[MAX_EVENTS]) {
   errif(epfd_ == -1, "epoll create error");
-  timer_ = std::make_unique<HeapTimer>();
+  //timer_ = std::make_unique<HeapTimer>();
   memset(events_, 0, sizeof(*events_) * MAX_EVENTS);
 }
 
@@ -56,13 +56,13 @@ void Epoll::UpdateChannel(Channel *channel) {
   if (channel->GetListenEvents() & Channel::ET) {
     event.events |= EPOLLET;
   }
-  if (channel->ShouldDelete()) {
+  if (channel->GetListenEvents()& Channel::TIMEOUT_EVENT) {
     DeleteChannel(channel);
     return;
   }
   if (!channel->GetInEpoll()) {
     errif(epoll_ctl(epfd_, EPOLL_CTL_ADD, sockfd, &event) == -1, "epoll add error");
-    timer_->Add(channel->GetSocket()->GetFd(), channel->GetTimeout(), channel->GetTimeoutCallback());
+    //timer_->Add(channel->GetSocket()->GetFd(), channel->GetTimeout(), channel->GetTimeoutCallback());
     channel->SetInEpoll();
   } else {
     errif(epoll_ctl(epfd_, EPOLL_CTL_MOD, sockfd, &event) == -1, "epoll modify error");

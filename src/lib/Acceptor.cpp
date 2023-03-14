@@ -8,7 +8,7 @@
 Acceptor::Acceptor(EventLoop *_loop) {
   sock_ = std::make_unique<Socket>();
   sock_->Bind("127.0.0.1", 1234);
-  // sock->setnonblocking(); acceptor使用阻塞式IO比较好
+  //sock_->SetNonBlocking(); //acceptor使用阻塞式IO比较好
   sock_->Listen();
 
   accept_channel_ = std::make_unique<Channel>(_loop, sock_.get());

@@ -23,7 +23,6 @@ TcpServer::TcpServer() {
   thread_pool_ = std::make_unique<ThreadPool>(size);
   for (int i = 0; i < size; ++i) {
     sub_reactors_.emplace_back(std::make_unique<EventLoop>());
-    
   }
 }
 void TcpServer::Start() {
@@ -41,15 +40,15 @@ void TcpServer::NewConnection(Socket *sock) {
   errif(sock->GetFd() == -1, "new connection error");
   uint64_t random = sock->GetFd() % sub_reactors_.size();
   auto conn = std::make_unique<Connection>(sub_reactors_[random].get(), sock);
- 
+  printf("connect random\n");
   std::function<void(Socket *)> callback = std::bind(&TcpServer::DeleteConnection, this, std::placeholders::_1);
   conn->SetDeleteConnectionCallback(callback);
 
   conn->SetOnConnectCallback(on_connect_callback_);
   conn->SetOnMessageCallback(on_message_callback_);
 
-  sub_reactors_[random]->AddTimer(sock->GetFd(), std::bind(&TcpServer::DeleteConnection, this, sock));
-  
+   sub_reactors_[random]->AddTimer(sock->GetFd(), std::bind(&TcpServer::DeleteConnection, this, sock));
+
   connections_[sock->GetFd()] = std::move(conn);
   if (new_connect_callback_) {
     new_connect_callback_(connections_[sock->GetFd()].get());
@@ -60,8 +59,10 @@ void TcpServer::DeleteConnection(Socket *sock) {
   int sockfd = sock->GetFd();
   auto iter = connections_.find(sockfd);
   if (iter != connections_.end()) {
+    iter->second->GetChannel()->SetDelete();
     connections_.erase(sockfd);
   }
+
 }
 
 void TcpServer::OnConnect(std::function<void(Connection *)> func) { on_connect_callback_ = std::move(func); }
