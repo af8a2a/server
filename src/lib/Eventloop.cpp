@@ -33,8 +33,10 @@ void EventLoop::Loop() {
     
 void EventLoop::UpdateChannel(Channel *channel) { epoll_->UpdateChannel(channel); }
 
-void EventLoop::AddTimer(int _fd, const std::function<void()> &func) {
-  timer_->Add(_fd, timeout_,func );
+void EventLoop::AddTimer(int _fd, const std::function<void()> &func) { timer_->Add(_fd, timeout_, func); }
+void EventLoop::DelTimer(int _fd) {
+  timer_->DoWork(_fd);
+
 }
 void EventLoop::SetTimeout(int timeout) {
   timeout_=timeout;

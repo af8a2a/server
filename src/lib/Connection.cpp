@@ -145,7 +145,7 @@ void Connection::WriteBlocking() {
   int sockfd = sock_->GetFd();
   ssize_t bytes_write = write(sockfd, send_buf_->ToStr(), send_buf_->Size());
     if (bytes_write == 0) {
-    printf("unknown bug to fix\n");
+    ;
     state_ = State::Closed;
   }
   if (bytes_write == -1) {

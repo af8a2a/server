@@ -18,7 +18,7 @@ class EventLoop {
   void UpdateChannel(Channel *channel);
   void DeleteChannel(Channel *channel);
   void SetTimeout(int timeout);
-
+  void DelTimer(int _fd);
  private:
   std::unique_ptr<HeapTimer> timer_;
   int timeout_{-1};

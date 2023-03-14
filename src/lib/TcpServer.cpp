@@ -24,7 +24,7 @@ TcpServer::TcpServer() {
   for (int i = 0; i < size; ++i) {
     sub_reactors_.emplace_back(std::make_unique<EventLoop>());
   }
-  main_reactor_->SetTimeout(20000);
+  main_reactor_->SetTimeout(2000);
 }
 void TcpServer::Start() {
   for (auto &sub_reactor : sub_reactors_) {
@@ -64,6 +64,7 @@ void TcpServer::DeleteConnection(Socket *sock) {
     iter->second->GetChannel()->SetDelete();
     connections_.erase(sockfd);
   }
+  //main_reactor_->DelTimer(sockfd);
 }
 
 

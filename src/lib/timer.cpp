@@ -73,7 +73,7 @@ void HeapTimer::DoWork(int id) {
   }
   size_t index = ref_[id];
   TimerNode node = heap_[index];
-  node.callback_();
+  //node.callback_();
   Del(index);
 }
 
