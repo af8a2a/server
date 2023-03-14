@@ -33,8 +33,10 @@
 auto main(int argc, char *argv[]) -> int {  // NOLINT
     auto *server = new TcpServer();
 
-    server->NewConnect(
-        [](Connection *conn) { std::cout << "New connection fd: " << conn->GetSocket()->GetFd() << std::endl; });
+    server->NewConnect([](Connection *conn) {
+      std::cout << "New connection fd: " << conn->GetSocket()->GetFd() << std::endl;
+        
+      });
 
     server->OnMessage([](Connection *conn) {
       if (conn->GetState() == Connection::State::Closed) {
@@ -42,8 +44,8 @@ auto main(int argc, char *argv[]) -> int {  // NOLINT
         //conn->Close();
         return;
       }
-    //   HTTP* http=new HTTP();
-    //   http->Prase(conn->ReadBuffer());
+       HTTP* http=new HTTP();
+       http->Prase(conn->ReadBuffer());
       std::cout << "Message from client " << conn->ReadBuffer() << std::endl;
       conn->Send(conn->ReadBuffer());
       //delete(http);

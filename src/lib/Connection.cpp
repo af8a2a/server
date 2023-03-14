@@ -8,6 +8,7 @@
 #include "Channel.hh"
 #include "Socket.hh"
 #include "httpconn.hh"
+#include "timer.hh"
 #define READ_BUFFER 1024
 
 #define ASSERT(expr, message) assert((expr) && (message))
@@ -18,6 +19,7 @@ Connection::Connection(EventLoop *loop, Socket *sock) {
     channel_ = std::make_unique<Channel>(loop, sock);
     channel_->EnableRead();
     channel_->UseET();
+    //channel_->AddTimer(sock->GetFd(),std::bind(&Connection::delete_connectioin_callback_,sock) );
   }
   http_connection_ = std::make_unique<HTTP>();
   read_buf_ = std::make_unique<Buffer>();
@@ -120,7 +122,9 @@ void Connection::ReadBlocking() {
   socklen_t len = sizeof(rcv_size);
   getsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &rcv_size, &len);
   char buf[1024];
+  //printf("client reach\n");
   ssize_t bytes_read = read(sockfd, buf, sizeof(buf));
+  printf("client reach\n");
   if (bytes_read > 0) {
     read_buf_->Append(buf, static_cast<int>(bytes_read));
   } else if (bytes_read == 0) {
@@ -140,6 +144,10 @@ void Connection::WriteBlocking() {
   // 没有处理send_buffer_数据大于TCP写缓冲区，的情况，可能会有bug
   int sockfd = sock_->GetFd();
   ssize_t bytes_write = write(sockfd, send_buf_->ToStr(), send_buf_->Size());
+    if (bytes_write == 0) {
+    printf("unknown bug to fix\n");
+    state_ = State::Closed;
+  }
   if (bytes_write == -1) {
     printf("Other error on blocking client fd %d\n", sockfd);
     state_ = State::Closed;
@@ -169,7 +177,7 @@ void Connection::SetDeleteConnectionCallback(std::function<void(Socket *)> const
 
 void Connection::SetOnConnectCallback(std::function<void(Connection *)> const &callback) {
   on_connect_callback_ = callback;
-  channel_->SetReadCallback([this]() { on_connect_callback_(this); });
+  //channel_->SetReadCallback([this]() { on_connect_callback_(this); });
 }
 
 void Connection::GetlineSendBuffer() { send_buf_->Getline(); }

@@ -19,7 +19,6 @@ class TcpServer {
   std::unordered_map<int, std::unique_ptr<Connection>> connections_;
   std::vector<std::unique_ptr<EventLoop>> sub_reactors_;
   std::unique_ptr<ThreadPool> thread_pool_;
-  std::function<void(Connection *)> on_connect_callback_;
   std::function<void(Connection *)> on_message_callback_;
   std::function<void(Connection *)> new_connect_callback_;
  public:
@@ -30,7 +29,6 @@ class TcpServer {
   void Start();
   void NewConnection(Socket *sock);
   void DeleteConnection(Socket *sock);
-  void OnConnect(std::function<void(Connection *)> func);
   void OnMessage(std::function<void(Connection *)> func);
   void NewConnect(std::function<void(Connection *)> func);
 };

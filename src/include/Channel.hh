@@ -31,7 +31,7 @@ class Channel {
   int GetTimeout();
   void SetTimeout(int timeout);
   void EnableTimeout();
-  void AddTimer();
+  void AddTimer(int _fd, const std::function<void()> &func);
   static const int READ_EVENT;
   static const int WRITE_EVENT;
   static const int TIMEOUT_EVENT;

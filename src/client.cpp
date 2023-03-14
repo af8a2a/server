@@ -7,11 +7,12 @@ int main() {
   sock->Connect("127.0.0.1", 1234);
 
   Connection *conn = new Connection(nullptr, sock);
-conn->Send("hello");
-  while (true) {
-    //conn->GetlineSendBuffer();
+  
     //conn->Send("hello");
-    // conn->Write();
+  while (true) {
+    conn->GetlineSendBuffer();
+    //conn->Send("hello");
+     conn->Write();
     if (conn->GetState() == Connection::State::Closed) {
       conn->Close();
       break;

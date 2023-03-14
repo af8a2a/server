@@ -31,6 +31,7 @@ void TcpServer::Start() {
     sub_reactor->SetTimeout(2000);
     thread_pool_->Add(std::move(sub_loop));
   }
+  printf("success\n");
   main_reactor_->Loop();
 }
 TcpServer::~TcpServer() = default;
@@ -44,7 +45,8 @@ void TcpServer::NewConnection(Socket *sock) {
   std::function<void(Socket *)> callback = std::bind(&TcpServer::DeleteConnection, this, std::placeholders::_1);
   conn->SetDeleteConnectionCallback(callback);
 
-  conn->SetOnConnectCallback(on_connect_callback_);
+  //conn->AddTimer(sock->GetFd(), std::bind(&TcpServer::DeleteConnection, this, sock));
+  // conn->SetOnConnectCallback(on_connect_callback_);
   conn->SetOnMessageCallback(on_message_callback_);
 
    sub_reactors_[random]->AddTimer(sock->GetFd(), std::bind(&TcpServer::DeleteConnection, this, sock));
@@ -62,10 +64,8 @@ void TcpServer::DeleteConnection(Socket *sock) {
     iter->second->GetChannel()->SetDelete();
     connections_.erase(sockfd);
   }
-
 }
 
-void TcpServer::OnConnect(std::function<void(Connection *)> func) { on_connect_callback_ = std::move(func); }
 
 void TcpServer::OnMessage(std::function<void(Connection *)> func) { on_message_callback_ = std::move(func); }
 

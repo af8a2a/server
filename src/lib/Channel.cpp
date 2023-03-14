@@ -8,7 +8,7 @@
 const int Channel::READ_EVENT = 1;
 const int Channel::WRITE_EVENT = 2;
 const int Channel::ET = 4;  // NOLINT
-const int Channel::TIMEOUT_EVENT=8;
+const int Channel::TIMEOUT_EVENT = 8;
 Channel::Channel(EventLoop *loop, Socket *socket) : loop_(loop), socket_(socket) {}
 
 Channel::~Channel() { loop_->DeleteChannel(this); }
@@ -22,9 +22,7 @@ void Channel::HandleEvent() {
   }
 }
 
-void Channel::SetDelete() {
-  should_delete_=true;
-  }
+void Channel::SetDelete() { should_delete_ = true; }
 
 void Channel::EnableRead() {
   listen_events_ |= READ_EVENT;
@@ -76,6 +74,10 @@ std::function<void()> &Channel::GetTimeoutCallback() { return timeout_callback_;
 int Channel::GetTimeout() { return timeout_; }
 void Channel::SetTimeout(int timeout) { timeout_ = timeout; }
 
-bool Channel::ShouldDelete() {
-  return should_delete_;
+bool Channel::ShouldDelete() { return should_delete_; }
+
+void Channel::AddTimer(int _fd, const std::function<void()> &func) {
+  if (loop_ != nullptr) {
+    loop_->AddTimer(_fd, func);
+  }
 }

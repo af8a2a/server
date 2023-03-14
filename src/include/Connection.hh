@@ -1,9 +1,10 @@
 #pragma once
 #include "Macros.h"
 
+
 #include <functional>
 #include <memory>
-
+class HeapTimer;
 class EventLoop;
 class Socket;
 class Channel;
@@ -46,6 +47,7 @@ class Connection {
   Channel *GetChannel();
   void OnConnect(std::function<void()> func);
   void OnMessage(std::function<void()> func);
+  void AddTimer(int _fd, const std::function<void()> &func);
 
  private:
   std::unique_ptr<Socket> sock_;
@@ -54,7 +56,6 @@ class Connection {
   std::unique_ptr<Buffer> read_buf_;
   std::unique_ptr<Buffer> send_buf_;
   std::unique_ptr<HTTP> http_connection_;
-
   std::function<void(Socket *)> delete_connectioin_callback_;
   std::function<void(Connection *)> on_connect_callback_;
   std::function<void(Connection *)> on_message_callback_;
