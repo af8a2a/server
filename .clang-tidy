@@ -1,49 +1,36 @@
 ---
 Checks:     '
+'
             bugprone-*,
-            -bugprone-exception-escape,
-
             clang-analyzer-*,
-
-            concurrency-*,
-            
             google-*,
-            -google-readability-casting,
-
-            cppcoreguidelines-*,
-            -cppcoreguidelines-macro-usage,
-            -cppcoreguidelines-owning-memory,
-            -cppcoreguidelines-avoid-magic-numbers,
-            -cppcoreguidelines-pro-type-vararg,
-            -cppcoreguidelines-avoid-c-arrays,
-            -cppcoreguidelines-pro-bounds-pointer-arithmetic,
-            -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
-            -cppcoreguidelines-pro-bounds-pointer-arithmetic,
-            -cppcoreguidelines-pro-type-cstyle-cast,
-
-
-
-            hicpp-*,
-            -hicpp-vararg,
-            -hicpp-use-auto,
-            -hicpp-no-array-decay,
-            -hicpp-avoid-c-arrays,
-            -hicpp-signed-bitwise,
-
             modernize-*,
-            -modernize-use-trailing-return-type,
-            -modernize-avoid-bind,
-            -modernize-avoid-c-arrays,
-            -modernize-use-auto,
-
             performance-*,
-
             portability-*,
-
             readability-*,
+            -bugprone-easily-swappable-parameters,
+            -bugprone-implicit-widening-of-multiplication-result,
+            -bugprone-narrowing-conversions,
+            -bugprone-reserved-identifier,
+            -bugprone-signed-char-misuse,
+            -bugprone-suspicious-include,
+            -bugprone-unhandled-self-assignment,
+            -clang-analyzer-cplusplus.NewDelete,
+            -clang-analyzer-cplusplus.NewDeleteLeaks,
+            -clang-analyzer-security.insecureAPI.rand,
+            -clang-diagnostic-implicit-int-float-conversion,
+            -google-readability-avoid-underscore-in-googletest-name,
+            -modernize-avoid-c-arrays,
+            -modernize-use-nodiscard,
+            -readability-convert-member-functions-to-static,
+            -readability-identifier-length,
+            -readability-function-cognitive-complexity,
             -readability-magic-numbers,
             -readability-make-member-function-const,
-            -readability-implicit-bool-conversion,
+            -readability-qualified-auto,
+            -readability-redundant-access-specifiers,
+            -bugprone-exception-escape,
+            '
             
             '
 CheckOptions:

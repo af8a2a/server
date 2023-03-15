@@ -1,99 +1,75 @@
-cmake_minimum_required(VERSION 3.22)
-project (Server)
+# 指定使用 CMake 的最低版本号
+cmake_minimum_required(VERSION 3.0)
 
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Wextra -std=c++20 -pthread")
-set(PINE_BUILD_SUPPORT_DIR "${CMAKE_SOURCE_DIR}/build_support")
-
-
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_BUILD_TYPE debug)
-set(SERVER_SRC_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/src/include)
-include_directories(${SERVER_SRC_INCLUDE_DIR})
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/lib)
-
+# 设置项目名称
+project(tiny_network C CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) 
 
-# clang-tidy
-if (NOT DEFINED CLANG_TIDY_BIN)
-    # attempt to find the binary if user did not specify
-    find_program(CLANG_TIDY_BIN
-            NAMES clang-tidy clang-fidy-8
-            HINTS ${PINE_CLANG_SEARCH_PATH})
-endif ()
-if ("${CLANG_TIDY_BIN}" STREQUAL "CLANG_TIDY_BIN-NOTFOUND")
-    message(WARNING "Pine/main couldn't find clang-tidy.")
-else ()
-    # Output compile_commands.json
-    set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
-    message(STATUS "Pine/main found clang-fidy at ${CLANG_TIDY_BIN}")
-endif ()
+# 添加搜索路径
+include_directories(
+    ${PROJECT_SOURCE_DIR}/src/base
+    ${PROJECT_SOURCE_DIR}/src/net
+    ${PROJECT_SOURCE_DIR}/src/net/poller
+    ${PROJECT_SOURCE_DIR}/src/net/http
+    ${PROJECT_SOURCE_DIR}/src/timer
+    ${PROJECT_SOURCE_DIR}/src/logger
+    ${PROJECT_SOURCE_DIR}/src/memory
+    ${PROJECT_SOURCE_DIR}/src/mysql
+    )
 
-# clang-format
-if (NOT DEFINED CLANG_FORMAT_BIN)
-    # attempt to find the binary if user did not specify
-    find_program(CLANG_FORMAT_BIN
-            NAMES clang-format clang-format-8
-            HINTS ${PINE_CLANG_SEARCH_PATH})
-endif ()
-if ("${CLANG_FORMAT_BIN}" STREQUAL "CLANG_FORMAT_BIN-NOTFOUND")
-    message(WARNING "Pine/main couldn't find clang-format.")
-else ()
-    message(STATUS "Pine/main found clang-format at ${CLANG_FORMAT_BIN}")
-endif ()
+# 包含这些目录下的.cc文件
+aux_source_directory(${PROJECT_SOURCE_DIR}/src/base SRC_BASE)
+aux_source_directory(${PROJECT_SOURCE_DIR}/src/net SRC_NET)
+aux_source_directory(${PROJECT_SOURCE_DIR}/src/net/poller SRC_POLLER)
+aux_source_directory(${PROJECT_SOURCE_DIR}/src/http SRC_HTTP)
+aux_source_directory(${PROJECT_SOURCE_DIR}/src/timer SRC_TIMER)
+aux_source_directory(${PROJECT_SOURCE_DIR}/src/logger SRC_LOG)
+aux_source_directory(${PROJECT_SOURCE_DIR}/src/memory SRC_MEMORY)
+aux_source_directory(${PROJECT_SOURCE_DIR}/src/mysql SRC_MYSQL)
 
+# 设置编译选项
+set(CXX_FLAGS
+    -g
+    -Wall
+    -std=c++11
+    )
 
+# 生成动态库 tiny_network
+add_library(tiny_network SHARED 
+            ${SRC_BASE}
+            ${SRC_NET}
+            ${SRC_POLLER}
+            ${SRC_TIMER}
+            ${SRC_LOG}
+            ${SRC_HTTP}
+            ${SRC_MEMORY}
+            ${SRC_MYSQL}
+            )
 
+# 目标动态库所需连接的库（这里需要连接libpthread.so）
+target_link_libraries(tiny_network pthread mysqlclient)
 
+# 设置生成动态库的路径，放在根目录的lib文件夹下面
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
+# 设置安装的默认路径
+set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
 
-add_executable(server src/server.cpp)
-add_executable(client src/client.cpp)
-add_executable(test src/test.cc)
-target_link_libraries(server LIB)
-target_link_libraries(client LIB)
-target_link_libraries(test LIB)
+# 将目录安装到 include/tiny_network 下（只安装头文件）
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/src/ DESTINATION include/tiny_network
+        FILES_MATCHING PATTERN "*.h")
 
+# 加载example
+add_subdirectory(example)
 
+# 加载http
+add_subdirectory(src/http)
 
+add_subdirectory(src/logger/test)
 
-###########################################################
-# "make clang-tidy" target
-###########################################################
-# runs clang-tidy and exits with a non-zero exit code if any errors are found.
-# note that clang-tidy automatically looks for a .clang-tidy file in parent directories
-add_custom_target(clang-tidy
-        ${PINE_BUILD_SUPPORT_DIR}/run_clang_tidy.py                     # run LLVM's clang-tidy script
-        -clang-tidy-binary ${CLANG_TIDY_BIN}                              # using our clang-tidy binary
-        -p ${CMAKE_BINARY_DIR}                                            # using cmake's generated compile commands
-        )
+add_subdirectory(src/memory/test)
 
-        ##########################################
-# "make format"
-# "make check-format"
-##########################################
-string(CONCAT PINE_FORMAT_DIRS
-"${CMAKE_CURRENT_SOURCE_DIR}/src,"
-"${CMAKE_CURRENT_SOURCE_DIR}/test,"
-)
+add_subdirectory(src/mysql/test)
 
-# runs clang format and updates files in place.
-add_custom_target(format ${PINE_BUILD_SUPPORT_DIR}/run_clang_format.py
-${CLANG_FORMAT_BIN}
-${PINE_BUILD_SUPPORT_DIR}/clang_format_exclusions.txt
---source_dirs
-${PINE_FORMAT_DIRS}
---fix
---quiet
-)
-
-# runs clang format and exits with a non-zero exit code if any files need to be reformatted
-add_custom_target(check-format ${PINE_BUILD_SUPPORT_DIR}/run_clang_format.py
-${CLANG_FORMAT_BIN}
-${PINE_BUILD_SUPPORT_DIR}/clang_format_exclusions.txt
---source_dirs
-${PINE_FORMAT_DIRS}
---quiet
-)
+# 加载base
+# add_subdirectory(src/base/test)
