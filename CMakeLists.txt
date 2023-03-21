@@ -1,75 +1,49 @@
-# 指定使用 CMake 的最低版本号
-cmake_minimum_required(VERSION 3.0)
-
-# 设置项目名称
-project(tiny_network C CXX)
+cmake_minimum_required(VERSION 2.6)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) 
 
-# 添加搜索路径
+project(WebServer C CXX)
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release")
+endif()
+
 include_directories(
-    ${PROJECT_SOURCE_DIR}/src/base
-    ${PROJECT_SOURCE_DIR}/src/net
-    ${PROJECT_SOURCE_DIR}/src/net/poller
-    ${PROJECT_SOURCE_DIR}/src/net/http
-    ${PROJECT_SOURCE_DIR}/src/timer
-    ${PROJECT_SOURCE_DIR}/src/logger
-    ${PROJECT_SOURCE_DIR}/src/memory
-    ${PROJECT_SOURCE_DIR}/src/mysql
-    )
+  Base 
+  Http 
+  Logging 
+  Timer 
+  Util
+)
 
-# 包含这些目录下的.cc文件
-aux_source_directory(${PROJECT_SOURCE_DIR}/src/base SRC_BASE)
-aux_source_directory(${PROJECT_SOURCE_DIR}/src/net SRC_NET)
-aux_source_directory(${PROJECT_SOURCE_DIR}/src/net/poller SRC_POLLER)
-aux_source_directory(${PROJECT_SOURCE_DIR}/src/http SRC_HTTP)
-aux_source_directory(${PROJECT_SOURCE_DIR}/src/timer SRC_TIMER)
-aux_source_directory(${PROJECT_SOURCE_DIR}/src/logger SRC_LOG)
-aux_source_directory(${PROJECT_SOURCE_DIR}/src/memory SRC_MEMORY)
-aux_source_directory(${PROJECT_SOURCE_DIR}/src/mysql SRC_MYSQL)
+SET(CXX_FLAGS
+  -g
+  -Wall
+  -Wextra
+  -Werror
+  -Wconversion
+  -Wshadow
+  -std=c++11
+)
 
-# 设置编译选项
-set(CXX_FLAGS
-    -g
-    -Wall
-    -std=c++11
-    )
+string(REPLACE ";" " " CMAKE_CXX_FLAGS "${CXX_FLAGS}")
+string(TOUPPER ${CMAKE_BUILD_TYPE} BUILD_TYPE)
 
-# 生成动态库 tiny_network
-add_library(tiny_network SHARED 
-            ${SRC_BASE}
-            ${SRC_NET}
-            ${SRC_POLLER}
-            ${SRC_TIMER}
-            ${SRC_LOG}
-            ${SRC_HTTP}
-            ${SRC_MEMORY}
-            ${SRC_MYSQL}
-            )
+set(CMAKE_CXX_COMPILER "g++")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
-# 目标动态库所需连接的库（这里需要连接libpthread.so）
-target_link_libraries(tiny_network pthread mysqlclient)
+find_package(Threads REQUIRED)
 
-# 设置生成动态库的路径，放在根目录的lib文件夹下面
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+message(STATUS "CXX_FLAGS = " ${CMAKE_CXX_FLAGS} " " ${CMAKE_CXX_FLAGS_${BUILD_TYPE}})
+message(STATUS "CMAKE_THREAD_LIBS_INIT = " ${CMAKE_THREAD_LIBS_INIT})
 
-# 设置安装的默认路径
-set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
+aux_source_directory(Base SRC_LIST1)
+aux_source_directory(Http SRC_LIST2)
+aux_source_directory(Logging SRC_LIST3)
+aux_source_directory(Timer SRC_LIST4)
+aux_source_directory(Util SRC_LIST5)
 
-# 将目录安装到 include/tiny_network 下（只安装头文件）
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/src/ DESTINATION include/tiny_network
-        FILES_MATCHING PATTERN "*.h")
+set (EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR})
+add_executable(WebServer main.cc ${SRC_LIST1} ${SRC_LIST2} ${SRC_LIST3} ${SRC_LIST4} ${SRC_LIST5})
 
-# 加载example
-add_subdirectory(example)
-
-# 加载http
-add_subdirectory(src/http)
-
-add_subdirectory(src/logger/test)
-
-add_subdirectory(src/memory/test)
-
-add_subdirectory(src/mysql/test)
-
-# 加载base
-# add_subdirectory(src/base/test)
+target_link_libraries(${PROJECT_NAME}  ${CMAKE_THREAD_LIBS_INIT})

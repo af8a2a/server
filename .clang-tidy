@@ -30,7 +30,7 @@ Checks:     '
             -readability-qualified-auto,
             -readability-redundant-access-specifiers,
             -bugprone-exception-escape,
-            '
+            
             
             '
 CheckOptions:

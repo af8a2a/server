@@ -1,0 +1,12 @@
+20230319 19:13:08.970900 55760 INFO  Httpserver listening on 0.0.0.0:8080 - httpserver.cc:23
+20230319 19:13:11.213468 55760 INFO  TcpServer::HandleNewConnection - new connection [0.0.0.0:8080#1] from 127.0.0.1:51542 - tcpserver.cc:53
+20230319 19:13:11.215019 55760 INFO  TcpServer::HandleNewConnection - new connection [0.0.0.0:8080#2] from 127.0.0.1:51558 - tcpserver.cc:53
+20230319 19:13:11.223542 55763 INFO  connection_state=keep-alive - httpserver.cc:52
+20230319 19:13:17.590356 55763 INFO  connection_state=keep-alive - httpserver.cc:52
+20230319 19:13:19.213914 55760 INFO  TcpServer::HandleCloseInLoop - remove connection [0.0.0.0:8080#1] - tcpserver.cc:38
+20230319 19:13:27.215521 55760 INFO  TcpServer::HandleCloseInLoop - remove connection [0.0.0.0:8080#2] - tcpserver.cc:38
+20230319 19:13:29.972755 55760 INFO  TcpServer::HandleNewConnection - new connection [0.0.0.0:8080#3] from 127.0.0.1:44812 - tcpserver.cc:53
+20230319 19:13:29.973468 55760 INFO  TcpServer::HandleNewConnection - new connection [0.0.0.0:8080#4] from 127.0.0.1:44814 - tcpserver.cc:53
+20230319 19:13:29.974947 55764 INFO  connection_state=keep-alive - httpserver.cc:52
+20230319 19:13:37.973846 55760 INFO  TcpServer::HandleCloseInLoop - remove connection [0.0.0.0:8080#4] - tcpserver.cc:38
+20230319 19:13:45.973617 55760 INFO  TcpServer::HandleCloseInLoop - remove connection [0.0.0.0:8080#3] - tcpserver.cc:38
