@@ -73,6 +73,7 @@ int main(int argc, char* argv[]) {
    asynclog.reset(new AsyncLogging());
    SetOutputFunc(AsyncOutputFunc);
    SetFlushFunc(AsyncFlushFunc);
+   SetLogLevel(tiny_muduo::Logger::ERROR);
    asynclog->StartAsyncLogging();
 
   // NOTE : for benchmark
