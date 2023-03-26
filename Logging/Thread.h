@@ -8,7 +8,7 @@
 #include <atomic>
 #include "noncopyable.h"
 
-class Thread : noncopyable
+class Thread : public tiny_muduo::NonCopyAble
 {
 public:
     using ThreadFunc = std::function<void()>;

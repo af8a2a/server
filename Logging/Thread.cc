@@ -1,6 +1,6 @@
 #include <semaphore.h>
 #include "Thread.h"
-#include "CurrentThread.h"
+#include "currentthread.h"
 
 std::atomic_int32_t Thread::numCreated_(0);
 

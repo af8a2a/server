@@ -1,17 +1,20 @@
 #include "asynclogging.h"
 
+#include <chrono>
+#include <ctime>
 #include <functional>
-#include <utility>
 #include <memory>
+#include <utility>
+#include "logging.h"
 
 using namespace tiny_muduo;
 
-void AsyncLogging::Append(const char* data, int len) {
+void AsyncLogging::Append(const char *data, int len) {
   MutexLockGuard guard(mutex_);
   if (current_->writablebytes() >= len) {
     current_->Append(data, len);
   } else {
-    buffers_to_write_.emplace_back(std::move(current_)); 
+    buffers_to_write_.emplace_back(std::move(current_));
     if (next_) {
       current_ = std::move(next_);
     } else {
@@ -21,18 +24,18 @@ void AsyncLogging::Append(const char* data, int len) {
   }
 }
 
-void AsyncLogging::Flush() {
-  fflush(stdout);
-}
+void AsyncLogging::Flush() { fflush(stdout); }
 
 void AsyncLogging::ThreadFunc() {
   latch_.CountDown();
   BufferPtr newbuffer_current(new Buffer());
   BufferPtr newbuffer_next(new Buffer());
   LogFilePtr log(new LogFile(filepath_));
+  logmanager_.Add(log->GetInfo());
   newbuffer_current->SetBufferZero();
   newbuffer_next->SetBufferZero();
   BufferVector buffers;
+  timeval tv;
 
   while (running_) {
     {
@@ -47,15 +50,23 @@ void AsyncLogging::ThreadFunc() {
       if (!next_) {
         next_ = std::move(newbuffer_next);
       }
-    }
-    for (const auto& buffer : buffers) {
+    }  // locker
+
+    for (const auto &buffer : buffers) {
       log->Write(buffer->data(), buffer->len());
     }
-
-    if (log->writtenbytes() >= kSingleFileMaximumSize) {
-      log.reset(new LogFile(filepath_));
-    } 
+    //滚动日志
+    gettimeofday(&tv, nullptr);
+    time_t now = tv.tv_sec;
+    LOG_DEBUG << "countdown:" << now - last_roll_;
     
+    if (( log->writtenbytes() >= kSingleFileMaximumSize || now - last_roll_ >= kRollPerSeconds_)&&isroll_log_) {
+      last_roll_ = now;
+      logmanager_.RemoveOldLog();
+      log.reset(new LogFile(filepath_));
+      logmanager_.Add(log->GetInfo());
+    }
+
     if (buffers.size() > 2) {
       buffers.resize(2);
     }
@@ -72,9 +83,11 @@ void AsyncLogging::ThreadFunc() {
       newbuffer_current->SetBufferZero();
     }
     buffers.clear();
+    
   }
 }
-void AsyncLogging::SetRollLog(bool isRool_)
-{
-  isroll_log_=isRool_;
+void AsyncLogging::SetRollLog(bool isRool_) { isroll_log_ = isRool_; }
+void AsyncLogging::SetRollinterval_(int interval_) { kRollPerSeconds_ = interval_; }
+void AsyncLogging::SetAutoDelete(int interval_) {
+  logmanager_.Setinterval(interval_);
 }

@@ -12,6 +12,7 @@ LogFile::LogFile(const char* filepath = nullptr)
                               Timestamp::Now().Timestamp::ToFormattedDefaultLogString() +
                               ".log");
     fp_ = ::fopen(DefaultPath.data(), "ae");
+    filedir_=DefaultPath;
   }
 }
 
